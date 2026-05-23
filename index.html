@@ -758,7 +758,7 @@ body::before {
   outline: none;
   border-color: var(--teal);
 }
-.form-row textarea { min-height: 80px; resize: vertical; }
+.form-row textarea { min-height: 140px; resize: vertical; line-height: 1.6; }
 
 .form-row-grid {
   display: grid;
@@ -983,6 +983,43 @@ body::before {
 .note-actions {
   margin-top: 18px;
   text-align: right;
+}
+
+/* ── Vault detail rows (key/value pairs inside expanded vault cards) ── */
+.vault-details {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 10px 18px;
+  padding: 14px 0 4px;
+  border-top: 1px solid var(--rule-soft);
+  font-size: 13px;
+  margin: 0;
+}
+.vault-details dt {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  padding-top: 2px;
+}
+.vault-details dd {
+  margin: 0;
+  color: var(--ink-soft);
+  word-break: break-word;
+}
+.vault-details dd.vault-location {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-mute);
+  letter-spacing: 0.01em;
+}
+
+/* When details list is followed by note content, give it space */
+.vault-details + .note-content {
+  padding-top: 14px;
+  border-top: 1px solid var(--rule-soft);
+  margin-top: 14px;
 }
 
 /* ── Footer ─────────────────────────────────────────────────────────── */
@@ -1439,18 +1476,7 @@ footer a:hover { color: var(--ink); border-color: var(--ink); }
         <span class="meta" id="vault-count">—</span>
       </div>
     </div>
-    <table class="table" id="vault-table">
-      <thead>
-        <tr>
-          <th>Document</th>
-          <th class="col-mobile-hide">Category</th>
-          <th class="col-mobile-hide">Location</th>
-          <th>Expires</th>
-          <th class="col-action"></th>
-        </tr>
-      </thead>
-      <tbody id="vault-tbody"></tbody>
-    </table>
+    <div id="vault-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
   </section>
 
   <!-- ── SETTINGS ──────────────────────────────────────────────── -->
@@ -2356,29 +2382,63 @@ function renderVault() {
   const filter = document.getElementById('vault-filter').value;
   let docs = [...data.vault];
   if (filter !== 'all') docs = docs.filter(d => d.category === filter);
-  docs.sort((a, b) => (a.category || '').localeCompare(b.category || '') || (a.name || '').localeCompare(b.name || ''));
+  // Sort: expiring soonest first (with no-expiry items at the end), then by name
+  docs.sort((a, b) => {
+    const da = a.expiry ? daysBetween(a.expiry) : 99999;
+    const db = b.expiry ? daysBetween(b.expiry) : 99999;
+    if (da !== db) return da - db;
+    return (a.name || '').localeCompare(b.name || '');
+  });
   document.getElementById('vault-count').textContent = `${docs.length} indexed`;
 
-  const tbody = document.getElementById('vault-tbody');
+  const wrap = document.getElementById('vault-list');
   if (docs.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5"><div class="empty"><h4>No documents indexed</h4><p>Start with your residence permit, passport, CDCS certificate, and degree.</p></div></td></tr>`;
+    wrap.innerHTML = `<div class="empty"><h4>No documents indexed</h4><p>Start with your residence permit, passport, CDCS certificate, and degree.</p></div>`;
     return;
   }
-  tbody.innerHTML = docs.map(d => {
+
+  wrap.innerHTML = docs.map(d => {
     const exp = d.expiry ? daysBetween(d.expiry) : null;
-    let expCls = '', expLbl = d.expiry ? formatDate(d.expiry) : '—';
+    let expCls = '', expLbl = '';
     if (exp !== null) {
-      if (exp < 0) expCls = 'days-exp';
-      else if (exp <= 30) expCls = 'days-crit';
-      else if (exp <= 90) expCls = 'days-warn';
+      if (exp < 0) { expCls = 'days-exp'; expLbl = 'Expired'; }
+      else if (exp === 0) { expCls = 'days-crit'; expLbl = 'Today'; }
+      else if (exp <= 30) { expCls = 'days-crit'; expLbl = exp + 'd'; }
+      else if (exp <= 90) { expCls = 'days-warn'; expLbl = exp + 'd'; }
+      else if (exp <= 365) { expCls = 'days-watch'; expLbl = Math.round(exp / 30) + 'mo'; }
+      else { expCls = 'days-ok'; expLbl = (Math.round(exp / 365 * 10) / 10) + 'y'; }
     }
-    return `<tr>
-      <td><strong>${escapeHtml(d.name)}</strong>${d.notes ? `<div style="color:var(--ink-mute);font-size:12px;margin-top:4px;">${escapeHtml(d.notes)}</div>` : ''}</td>
-      <td class="col-mobile-hide"><span class="pill">${escapeHtml(d.category || '—')}</span></td>
-      <td class="col-mobile-hide" style="font-family:var(--font-mono);font-size:12px;color:var(--ink-mute);">${escapeHtml(d.location || '—')}</td>
-      <td class="${expCls}">${expLbl}</td>
-      <td class="col-action"><button class="btn" onclick="editVault('${d.id}')">Edit</button></td>
-    </tr>`;
+
+    const detailsRows = [];
+    if (d.location) detailsRows.push(`<dt>Location</dt><dd class="vault-location">${escapeHtml(d.location)}</dd>`);
+    if (d.expiry) detailsRows.push(`<dt>Expires</dt><dd>${formatDate(d.expiry)}</dd>`);
+    const detailsHtml = detailsRows.length
+      ? `<dl class="vault-details">${detailsRows.join('')}</dl>`
+      : '';
+
+    const notesHtml = d.notes
+      ? `<div class="note-content">${renderNoteContent(d.notes)}</div>`
+      : '';
+
+    return `
+      <details class="note-card">
+        <summary class="note-summary">
+          <div class="note-meta">
+            <span><span class="accent"></span>${escapeHtml(d.category || 'Other')}</span>
+            ${expLbl ? `<span class="expiry-days ${expCls}">${expLbl}</span>` : '<span></span>'}
+          </div>
+          <h3 class="note-title">
+            <span class="note-chevron">›</span>
+            <span>${escapeHtml(d.name)}</span>
+          </h3>
+        </summary>
+        <div class="note-body">
+          ${detailsHtml}
+          ${notesHtml}
+          <div class="note-actions"><button class="btn" onclick="editVault('${d.id}')">Edit</button></div>
+        </div>
+      </details>
+    `;
   }).join('');
 }
 
