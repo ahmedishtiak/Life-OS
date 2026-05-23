@@ -869,6 +869,122 @@ body::before {
 .welcome p:last-child { margin-bottom: 0; }
 .welcome .actions { margin-top: 18px; display: flex; gap: 10px; flex-wrap: wrap; }
 
+/* ── Note cards (collapsible accordion) ─────────────────────────────── */
+.note-card {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  transition: border-color .2s, background .2s;
+}
+.note-card:hover { border-color: var(--ink-mute); }
+.note-card[open] {
+  border-color: var(--ink-mute);
+  background: var(--paper-2);
+}
+
+.note-summary {
+  padding: 18px 22px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  transition: background .15s;
+  border-radius: 3px;
+}
+.note-summary::-webkit-details-marker { display: none; }
+.note-summary::marker { content: ''; }
+
+.note-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.note-meta .accent {
+  display: inline-block;
+  width: 18px;
+  height: 1px;
+  background: var(--teal);
+  margin-right: 10px;
+  vertical-align: middle;
+}
+
+.note-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 18px;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0;
+  line-height: 1.3;
+  font-variation-settings: 'opsz' 20;
+}
+
+.note-chevron {
+  display: inline-block;
+  color: var(--teal);
+  font-size: 22px;
+  line-height: 1;
+  transition: transform .2s ease;
+  width: 12px;
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+}
+.note-card[open] .note-chevron {
+  transform: rotate(90deg) translateX(-2px);
+}
+
+.note-body {
+  padding: 4px 22px 22px 22px;
+  animation: noteExpand .22s ease;
+}
+@keyframes noteExpand {
+  from { opacity: 0; transform: translateY(-3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.note-content {
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule-soft);
+}
+
+.note-link {
+  color: var(--teal);
+  text-decoration: none;
+  border-bottom: 1px solid var(--rule);
+  transition: border-color .15s, color .15s;
+  word-break: break-all;
+}
+.note-link:hover {
+  border-color: var(--teal);
+  color: var(--teal-soft);
+}
+
+.note-tags {
+  margin-top: 16px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.note-actions {
+  margin-top: 18px;
+  text-align: right;
+}
+
 /* ── Footer ─────────────────────────────────────────────────────────── */
 footer {
   border-top: 1px solid var(--rule);
@@ -937,7 +1053,7 @@ footer a:hover { color: var(--ink); border-color: var(--ink); }
     <a href="#learning" data-route="learning">Learning</a>
     <a href="#career" data-route="career">Career</a>
     <a href="#people" data-route="people">People</a>
-    <a href="#knowledge" data-route="knowledge">Knowledge</a>
+    <a href="#notes" data-route="notes">Notes</a>
     <a href="#vault" data-route="vault">Vault</a>
     <a href="#settings" data-route="settings">Settings</a>
   </nav>
@@ -1278,9 +1394,9 @@ footer a:hover { color: var(--ink); border-color: var(--ink); }
   </section>
 
   <!-- ── KNOWLEDGE ─────────────────────────────────────────────── -->
-  <section class="page" id="page-knowledge">
+  <section class="page" id="page-notes">
     <div class="section-head">
-      <h2>Knowledge</h2>
+      <h2>Notes</h2>
       <span class="meta">Capture · process · connect</span>
     </div>
     <div class="toolbar">
@@ -1290,7 +1406,7 @@ footer a:hover { color: var(--ink); border-color: var(--ink); }
         <span class="meta" id="knowledge-count">—</span>
       </div>
     </div>
-    <div id="knowledge-list" style="display: grid; gap: 16px;"></div>
+    <div id="knowledge-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
   </section>
 
   <!-- ── VAULT ─────────────────────────────────────────────────── -->
@@ -1560,8 +1676,14 @@ const QUOTES = [
 ];
 
 // ── Routing ─────────────────────────────────────────────────────────
+const ROUTE_ALIASES = { knowledge: 'notes' }; // backward compat for renamed routes
+
 function route() {
-  const hash = window.location.hash.slice(1) || 'today';
+  let hash = window.location.hash.slice(1) || 'today';
+  if (ROUTE_ALIASES[hash]) {
+    hash = ROUTE_ALIASES[hash];
+    history.replaceState(null, '', '#' + hash);
+  }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav a').forEach(a => a.classList.remove('active'));
   const page = document.getElementById('page-' + hash);
@@ -1581,7 +1703,7 @@ function renderCurrentView(hash) {
     case 'learning': renderLearning(); break;
     case 'career': renderCareer(); break;
     case 'people': renderPeople(); break;
-    case 'knowledge': renderKnowledge(); break;
+    case 'notes': renderKnowledge(); break;
     case 'vault': renderVault(); break;
     case 'settings': renderSettings(); break;
   }
@@ -2156,7 +2278,7 @@ function renderPeople() {
 
 function editPerson(id) { openModal('person', id); }
 
-// ── KNOWLEDGE ───────────────────────────────────────────────────────
+// ── NOTES (data.knowledge kept for backward compat) ─────────────────
 function renderKnowledge() {
   const search = (document.getElementById('knowledge-search').value || '').toLowerCase();
   let notes = [...data.knowledge];
@@ -2175,18 +2297,56 @@ function renderKnowledge() {
     wrap.innerHTML = `<div class="empty"><h4>No notes</h4><p>Capture ideas as they appear. Process during weekly review.</p></div>`;
     return;
   }
-  wrap.innerHTML = notes.map(n => `
-    <div class="card">
-      <div class="card-label">
-        <span><span class="accent"></span>${escapeHtml(n.type || 'Note')}</span>
-        <span>${n.date ? formatDate(n.date) : ''}</span>
-      </div>
-      <h3 style="margin-bottom: 8px;">${escapeHtml(n.title)}</h3>
-      <div style="color: var(--ink-soft); font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${escapeHtml(n.content || '')}</div>
-      ${(n.tags && n.tags.length) ? `<div style="margin-top: 14px; display: flex; gap: 6px; flex-wrap: wrap;">${n.tags.map(t => `<span class="pill">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
-      <div style="margin-top: 14px; text-align: right;"><button class="btn" onclick="editNote('${n.id}')">Edit</button></div>
-    </div>
-  `).join('');
+
+  wrap.innerHTML = notes.map(n => {
+    // When searching, auto-expand if the match is in content/tags (not the title)
+    const shouldExpand = search && !((n.title || '').toLowerCase().includes(search)) && (
+      (n.content || '').toLowerCase().includes(search) ||
+      (n.tags || []).some(t => t.toLowerCase().includes(search))
+    );
+    const tagsHtml = (n.tags && n.tags.length)
+      ? `<div class="note-tags">${n.tags.map(t => `<span class="pill">${escapeHtml(t)}</span>`).join('')}</div>`
+      : '';
+    const contentHtml = n.content
+      ? `<div class="note-content">${renderNoteContent(n.content)}</div>`
+      : '<div class="note-content" style="color:var(--ink-mute); font-style: italic;">No content. Click edit to add.</div>';
+
+    return `
+      <details class="note-card" ${shouldExpand ? 'open' : ''}>
+        <summary class="note-summary">
+          <div class="note-meta">
+            <span><span class="accent"></span>${escapeHtml(n.type || 'Note')}</span>
+            <span>${n.date ? formatDate(n.date) : ''}</span>
+          </div>
+          <h3 class="note-title">
+            <span class="note-chevron">›</span>
+            <span>${escapeHtml(n.title)}</span>
+          </h3>
+        </summary>
+        <div class="note-body">
+          ${contentHtml}
+          ${tagsHtml}
+          <div class="note-actions"><button class="btn" onclick="editNote('${n.id}')">Edit</button></div>
+        </div>
+      </details>
+    `;
+  }).join('');
+}
+
+// Escape HTML, then linkify https:// URLs and bare www. domains
+function renderNoteContent(content) {
+  if (!content) return '';
+  let s = escapeHtml(content);
+  // Linkify full URLs first
+  s = s.replace(/(https?:\/\/[^\s<]+)/g, (url) => {
+    let trailing = '';
+    while (/[.,;:!?)\]]$/.test(url)) {
+      trailing = url.slice(-1) + trailing;
+      url = url.slice(0, -1);
+    }
+    return `<a href="${url}" target="_blank" rel="noopener" class="note-link">${url}</a>${trailing}`;
+  });
+  return s;
 }
 
 function editNote(id) { openModal('note', id); }
