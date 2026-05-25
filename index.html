@@ -1022,6 +1022,68 @@ body::before {
   margin-top: 14px;
 }
 
+/* ── Dates in meta line — natural case, not uppercase ─────────────── */
+.note-meta .expiry-days {
+  text-transform: none;
+  letter-spacing: 0.02em;
+  font-size: 12px;
+}
+
+/* ── Tasks: done state and quick-action button ────────────────────── */
+.note-card.task-done {
+  opacity: 0.55;
+}
+.note-card.task-done .task-title-text {
+  text-decoration: line-through;
+  color: var(--ink-mute);
+}
+.note-card.task-done:hover {
+  opacity: 0.75;
+}
+
+.note-title.with-action {
+  align-items: center;
+  gap: 12px;
+}
+.note-title.with-action .task-title-text {
+  flex: 1;
+  line-height: 1.3;
+}
+
+.quick-action {
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--ink-soft);
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  transition: all .15s ease;
+  flex-shrink: 0;
+  font-family: var(--font-body);
+}
+.quick-action:hover {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: var(--paper);
+  transform: scale(1.05);
+}
+.quick-action.is-done {
+  background: var(--sage);
+  border-color: var(--sage);
+  color: var(--paper);
+}
+.quick-action.is-done:hover {
+  background: var(--terra);
+  border-color: var(--terra);
+}
+
 /* ── Footer ─────────────────────────────────────────────────────────── */
 footer {
   border-top: 1px solid var(--rule);
@@ -1194,19 +1256,7 @@ footer a:hover { color: var(--ink); border-color: var(--ink); }
         <span class="meta" id="task-count">—</span>
       </div>
     </div>
-    <table class="table" id="tasks-table">
-      <thead>
-        <tr>
-          <th style="width: 60px;">P</th>
-          <th>Title</th>
-          <th class="col-mobile-hide" style="width: 120px;">Area</th>
-          <th class="col-mobile-hide" style="width: 110px;">Status</th>
-          <th class="col-mobile-hide" style="width: 110px;">Due</th>
-          <th class="col-action" style="width: 80px;"></th>
-        </tr>
-      </thead>
-      <tbody id="tasks-tbody"></tbody>
-    </table>
+    <div id="tasks-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
   </section>
 
   <!-- ── DEADLINES ─────────────────────────────────────────────── -->
@@ -1262,19 +1312,7 @@ footer a:hover { color: var(--ink); border-color: var(--ink); }
       </div>
     </div>
 
-    <table class="table" id="money-table">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Assets (EUR)</th>
-          <th>Liabilities (EUR)</th>
-          <th>Net worth (EUR)</th>
-          <th class="col-mobile-hide">Notes</th>
-          <th class="col-action"></th>
-        </tr>
-      </thead>
-      <tbody id="money-tbody"></tbody>
-    </table>
+    <div id="money-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
   </section>
 
   <!-- ── LEARNING ──────────────────────────────────────────────── -->
@@ -1318,18 +1356,7 @@ footer a:hover { color: var(--ink); border-color: var(--ink); }
       </div>
     </div>
 
-    <table class="table" id="learn-table">
-      <thead>
-        <tr>
-          <th style="width: 120px;">Date</th>
-          <th style="width: 80px;">Min</th>
-          <th>Activity</th>
-          <th class="col-mobile-hide">Notes</th>
-          <th class="col-action"></th>
-        </tr>
-      </thead>
-      <tbody id="learn-tbody"></tbody>
-    </table>
+    <div id="learn-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
   </section>
 
   <!-- ── CAREER ────────────────────────────────────────────────── -->
@@ -1371,19 +1398,7 @@ footer a:hover { color: var(--ink); border-color: var(--ink); }
       </div>
     </div>
 
-    <table class="table" id="career-table">
-      <thead>
-        <tr>
-          <th>Company</th>
-          <th>Role</th>
-          <th class="col-mobile-hide">Status</th>
-          <th class="col-mobile-hide" style="width: 120px;">Applied</th>
-          <th class="col-mobile-hide">Next action</th>
-          <th class="col-action"></th>
-        </tr>
-      </thead>
-      <tbody id="career-tbody"></tbody>
-    </table>
+    <div id="career-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
   </section>
 
   <!-- ── PEOPLE ────────────────────────────────────────────────── -->
@@ -1404,18 +1419,7 @@ footer a:hover { color: var(--ink); border-color: var(--ink); }
         <span class="meta" id="people-count">—</span>
       </div>
     </div>
-    <table class="table" id="people-table">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th class="col-mobile-hide">Relationship</th>
-          <th class="col-mobile-hide">Last contact</th>
-          <th>Next follow-up</th>
-          <th class="col-action"></th>
-        </tr>
-      </thead>
-      <tbody id="people-tbody"></tbody>
-    </table>
+    <div id="people-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
   </section>
 
   <!-- ── KNOWLEDGE ─────────────────────────────────────────────── -->
@@ -1964,6 +1968,9 @@ function renderTasks() {
   }
 
   tasks.sort((a, b) => {
+    // Done tasks always at bottom
+    if (a.status === 'Done' && b.status !== 'Done') return 1;
+    if (b.status === 'Done' && a.status !== 'Done') return -1;
     const pa = parseInt((a.priority || 'P9').slice(1));
     const pb = parseInt((b.priority || 'P9').slice(1));
     if (pa !== pb) return pa - pb;
@@ -1973,28 +1980,80 @@ function renderTasks() {
   });
 
   document.getElementById('task-count').textContent = `${tasks.length} of ${data.tasks.length}`;
-  const tbody = document.getElementById('tasks-tbody');
+  const wrap = document.getElementById('tasks-list');
 
   if (tasks.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6"><div class="empty"><h4>No tasks in this view</h4><p>The cleanest list is one that's been processed, not one that's empty.</p></div></td></tr>`;
+    wrap.innerHTML = `<div class="empty"><h4>No tasks in this view</h4><p>The cleanest list is one that's been processed, not one that's empty.</p></div>`;
     return;
   }
 
-  tbody.innerHTML = tasks.map(t => {
-    const pcls = (t.priority || 'P4').toLowerCase();
-    const scls = (t.status || 'Inbox').toLowerCase();
-    const due = t.due ? formatDate(t.due) + (daysBetween(t.due) < 0 && t.status !== 'Done' ? ' <span style="color:var(--rust)">⚠</span>' : '') : '—';
-    return `<tr>
-      <td><span class="pill ${pcls}">${t.priority || 'P4'}</span></td>
-      <td><strong>${escapeHtml(t.title)}</strong>${t.notes ? `<div style="color:var(--ink-mute);font-size:12px;margin-top:4px;">${escapeHtml(t.notes)}</div>` : ''}</td>
-      <td class="col-mobile-hide"><span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-mute);letter-spacing:0.05em;">${escapeHtml(t.area || '—')}</span></td>
-      <td class="col-mobile-hide"><span class="pill ${scls}">${t.status}</span></td>
-      <td class="col-mobile-hide">${due}</td>
-      <td class="col-action">
-        <button class="btn" onclick="toggleTaskDone('${t.id}')">${t.status === 'Done' ? '↺' : '✓'}</button>
-        <button class="btn" onclick="editTask('${t.id}')">Edit</button>
-      </td>
-    </tr>`;
+  const statusColor = {
+    'Inbox': 'var(--ink-mute)', 'Next': 'var(--teal)', 'Waiting': 'var(--amber)',
+    'Scheduled': 'var(--teal)', 'Done': 'var(--sage)', 'Archived': 'var(--ink-mute)'
+  };
+  const priorityColor = {
+    'P1': 'var(--rust)', 'P2': 'var(--terra)', 'P3': 'var(--amber)', 'P4': 'var(--ink-mute)'
+  };
+
+  wrap.innerHTML = tasks.map(t => {
+    const isDone = t.status === 'Done';
+    const pc = priorityColor[t.priority] || 'var(--ink-mute)';
+    const sc = statusColor[t.status] || 'var(--ink-mute)';
+
+    // Due-date display (in meta right slot)
+    let dueLbl = '', dueCls = '';
+    if (t.due) {
+      const days = daysBetween(t.due);
+      if (isDone) {
+        dueLbl = formatDate(t.due);
+      } else if (days < 0) {
+        dueLbl = 'Overdue ' + Math.abs(days) + 'd';
+        dueCls = 'days-exp';
+      } else if (days === 0) {
+        dueLbl = 'Due today';
+        dueCls = 'days-crit';
+      } else if (days === 1) {
+        dueLbl = 'Due tomorrow';
+        dueCls = 'days-crit';
+      } else if (days <= 7) {
+        dueLbl = 'Due ' + formatDate(t.due);
+        dueCls = 'days-warn';
+      } else {
+        dueLbl = 'Due ' + formatDate(t.due);
+      }
+    }
+
+    // Expanded details
+    const detailsRows = [];
+    if (t.priority) detailsRows.push(`<dt>Priority</dt><dd style="color: ${pc}; font-weight: 500;">${t.priority}</dd>`);
+    if (t.status) detailsRows.push(`<dt>Status</dt><dd style="color: ${sc};">${escapeHtml(t.status)}</dd>`);
+    if (t.area) detailsRows.push(`<dt>Area</dt><dd>${escapeHtml(t.area)}</dd>`);
+    if (t.due) detailsRows.push(`<dt>Due</dt><dd>${formatDate(t.due)}</dd>`);
+    const detailsHtml = detailsRows.length ? `<dl class="vault-details">${detailsRows.join('')}</dl>` : '';
+    const notesHtml = t.notes ? `<div class="note-content">${renderNoteContent(t.notes)}</div>` : '';
+
+    return `
+      <details class="note-card${isDone ? ' task-done' : ''}">
+        <summary class="note-summary">
+          <div class="note-meta">
+            <span><span class="accent"></span><span style="color: ${pc}; font-weight: 600;">${t.priority || 'P4'}</span> · <span style="color: ${sc};">${escapeHtml(t.status || '')}</span>${t.area ? ' · ' + escapeHtml(t.area) : ''}</span>
+            ${dueLbl ? `<span class="expiry-days ${dueCls}">${dueLbl}</span>` : '<span></span>'}
+          </div>
+          <h3 class="note-title with-action">
+            <span class="note-chevron">›</span>
+            <span class="task-title-text">${escapeHtml(t.title)}</span>
+            <button class="quick-action${isDone ? ' is-done' : ''}"
+                    onclick="event.stopPropagation(); event.preventDefault(); toggleTaskDone('${t.id}');"
+                    title="${isDone ? 'Reopen' : 'Mark done'}">${isDone ? '↺' : '✓'}</button>
+          </h3>
+        </summary>
+        <div class="note-body">
+          ${detailsHtml}
+          ${notesHtml}
+          <div class="note-actions"><button class="btn" onclick="editTask('${t.id}')">Edit</button></div>
+        </div>
+      </details>
+    `;
   }).join('');
 }
 
@@ -2169,19 +2228,52 @@ function renderMoney() {
   }
   document.getElementById('money-count').textContent = items.length;
 
-  const tbody = document.getElementById('money-tbody');
+  const wrap = document.getElementById('money-list');
   if (items.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6"><div class="empty"><h4>No snapshots yet</h4><p>Take your first net worth snapshot. Repeat monthly. The number you watch is the curve, not any single point.</p></div></td></tr>`;
+    wrap.innerHTML = `<div class="empty"><h4>No snapshots yet</h4><p>Take your first net worth snapshot. Repeat monthly. The number you watch is the curve, not any single point.</p></div>`;
     return;
   }
-  tbody.innerHTML = items.map(m => `<tr>
-    <td>${formatDate(m.date)}</td>
-    <td>${fmtEUR(m.assets)}</td>
-    <td>${fmtEUR(m.liabilities)}</td>
-    <td><strong>${fmtEUR(m.netWorth)}</strong></td>
-    <td class="col-mobile-hide" style="color:var(--ink-mute);font-size:13px;">${escapeHtml(m.notes || '')}</td>
-    <td class="col-action"><button class="btn" onclick="editMoney('${m.id}')">Edit</button></td>
-  </tr>`).join('');
+
+  wrap.innerHTML = items.map((m, idx) => {
+    const prev = items[idx + 1];
+    const delta = prev ? m.netWorth - prev.netWorth : null;
+    let deltaLbl = '', deltaCls = '';
+    if (delta !== null) {
+      deltaLbl = (delta >= 0 ? '+' : '−') + fmtEUR(Math.abs(delta));
+      deltaCls = delta >= 0 ? 'days-ok' : 'days-exp';
+    }
+
+    const detailsRows = [
+      `<dt>Assets</dt><dd>${fmtEUR(m.assets)}</dd>`,
+      `<dt>Liabilities</dt><dd>${fmtEUR(m.liabilities)}</dd>`,
+      `<dt>Net worth</dt><dd><strong>${fmtEUR(m.netWorth)}</strong></dd>`
+    ];
+    if (prev) {
+      detailsRows.push(`<dt>Change</dt><dd><span class="${deltaCls}" style="font-family: var(--font-mono); font-size: 12px;">${deltaLbl}</span> from ${formatDate(prev.date)}</dd>`);
+    }
+    const detailsHtml = `<dl class="vault-details">${detailsRows.join('')}</dl>`;
+    const notesHtml = m.notes ? `<div class="note-content">${renderNoteContent(m.notes)}</div>` : '';
+
+    return `
+      <details class="note-card">
+        <summary class="note-summary">
+          <div class="note-meta">
+            <span><span class="accent"></span>Net worth · <strong style="color: var(--ink); font-family: var(--font-mono); letter-spacing: 0.02em;">${fmtEUR(m.netWorth)}</strong></span>
+            ${deltaLbl ? `<span class="expiry-days ${deltaCls}">${deltaLbl}</span>` : '<span></span>'}
+          </div>
+          <h3 class="note-title">
+            <span class="note-chevron">›</span>
+            <span>${formatDate(m.date)}</span>
+          </h3>
+        </summary>
+        <div class="note-body">
+          ${detailsHtml}
+          ${notesHtml}
+          <div class="note-actions"><button class="btn" onclick="editMoney('${m.id}')">Edit</button></div>
+        </div>
+      </details>
+    `;
+  }).join('');
 }
 
 function editMoney(id) { openModal('money', id); }
@@ -2228,18 +2320,39 @@ function renderLearning() {
   document.getElementById('learn-heatmap').innerHTML = heat;
 
   // Table
-  const tbody = document.getElementById('learn-tbody');
+  const wrap = document.getElementById('learn-list');
   if (sessions.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5"><div class="empty"><h4>Päivää!</h4><p>Log your first Finnish session. 10 minutes counts. Consistency beats intensity.</p></div></td></tr>`;
+    wrap.innerHTML = `<div class="empty"><h4>Päivää!</h4><p>Log your first Finnish session. 10 minutes counts. Consistency beats intensity.</p></div>`;
     return;
   }
-  tbody.innerHTML = sessions.slice(0, 30).map(s => `<tr>
-    <td>${formatDate(s.date)}</td>
-    <td><strong>${s.minutes || 0}</strong></td>
-    <td>${escapeHtml(s.activity || '')}</td>
-    <td class="col-mobile-hide" style="color:var(--ink-mute);font-size:13px;">${escapeHtml(s.notes || '')}</td>
-    <td class="col-action"><button class="btn" onclick="editLearn('${s.id}')">Edit</button></td>
-  </tr>`).join('');
+  wrap.innerHTML = sessions.slice(0, 60).map(s => {
+    const detailsRows = [];
+    if (s.minutes) detailsRows.push(`<dt>Minutes</dt><dd><strong>${s.minutes}</strong></dd>`);
+    if (s.activity) detailsRows.push(`<dt>Activity</dt><dd>${escapeHtml(s.activity)}</dd>`);
+    if (s.date) detailsRows.push(`<dt>Date</dt><dd>${formatDate(s.date)}</dd>`);
+    const detailsHtml = detailsRows.length ? `<dl class="vault-details">${detailsRows.join('')}</dl>` : '';
+    const notesHtml = s.notes ? `<div class="note-content">${renderNoteContent(s.notes)}</div>` : '';
+
+    return `
+      <details class="note-card">
+        <summary class="note-summary">
+          <div class="note-meta">
+            <span><span class="accent"></span>${escapeHtml(s.activity || 'Session')}</span>
+            <span class="expiry-days"><strong style="color: var(--ink);">${s.minutes || 0}</strong> min</span>
+          </div>
+          <h3 class="note-title">
+            <span class="note-chevron">›</span>
+            <span>${formatDate(s.date)}</span>
+          </h3>
+        </summary>
+        <div class="note-body">
+          ${detailsHtml}
+          ${notesHtml}
+          <div class="note-actions"><button class="btn" onclick="editLearn('${s.id}')">Edit</button></div>
+        </div>
+      </details>
+    `;
+  }).join('');
 }
 
 function editLearn(id) { openModal('learn', id); }
@@ -2266,34 +2379,65 @@ function renderCareer() {
   document.getElementById('career-offers').textContent = all.filter(a => (a.status || '').includes('Offer')).length;
   document.getElementById('career-total').textContent = all.length;
 
-  const tbody = document.getElementById('career-tbody');
+  const wrap = document.getElementById('career-list');
   if (apps.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6"><div class="empty"><h4>No applications in this view</h4><p>Aim for 5–10 active applications at a time. Track every one.</p></div></td></tr>`;
+    wrap.innerHTML = `<div class="empty"><h4>No applications in this view</h4><p>Aim for 5–10 active applications at a time. Track every one.</p></div>`;
     return;
   }
 
-  tbody.innerHTML = apps.map(a => {
-    const statusColor = {
-      'Drafting': 'inbox',
-      'Applied': 'next',
-      'Screening': 'next',
-      'Interview 1': 'p2',
-      'Interview 2': 'p1',
-      'Offer': 'done',
-      'Offer accepted': 'done',
-      'Offer declined': 'p4',
-      'Rejected': 'p4',
-      'Withdrew': 'p4'
-    }[a.status] || '';
-    const nextDue = a.nextDate ? `${formatDate(a.nextDate)}${daysBetween(a.nextDate) < 0 ? ' <span style="color:var(--rust)">⚠</span>' : ''}` : '';
-    return `<tr>
-      <td><strong>${escapeHtml(a.company)}</strong></td>
-      <td>${escapeHtml(a.role)}</td>
-      <td class="col-mobile-hide"><span class="pill ${statusColor}">${escapeHtml(a.status || '')}</span></td>
-      <td class="col-mobile-hide">${a.applied ? formatDate(a.applied) : '—'}</td>
-      <td class="col-mobile-hide">${a.nextAction ? `<strong>${escapeHtml(a.nextAction)}</strong><br><span style="color:var(--ink-mute);font-size:12px;">${nextDue}</span>` : '—'}</td>
-      <td class="col-action"><button class="btn" onclick="editApp('${a.id}')">Edit</button></td>
-    </tr>`;
+  const statusColor = {
+    'Drafting': 'var(--ink-mute)', 'Applied': 'var(--teal)', 'Screening': 'var(--teal)',
+    'Interview 1': 'var(--terra)', 'Interview 2': 'var(--rust)', 'Interview 3': 'var(--rust)',
+    'Offer': 'var(--sage)', 'Offer accepted': 'var(--sage)',
+    'Offer declined': 'var(--ink-mute)', 'Rejected': 'var(--ink-mute)', 'Withdrew': 'var(--ink-mute)'
+  };
+
+  wrap.innerHTML = apps.map(a => {
+    const sc = statusColor[a.status] || 'var(--ink-mute)';
+
+    // Right-side meta: prefer next action date if available, else applied date
+    let rightLbl = '', rightCls = '';
+    if (a.nextDate) {
+      const days = daysBetween(a.nextDate);
+      rightLbl = 'Next ' + formatDate(a.nextDate);
+      if (days < 0) rightCls = 'days-exp';
+      else if (days <= 3) rightCls = 'days-crit';
+      else if (days <= 7) rightCls = 'days-warn';
+    } else if (a.applied) {
+      rightLbl = 'Applied ' + formatDate(a.applied);
+    }
+
+    // Details
+    const detailsRows = [];
+    if (a.status) detailsRows.push(`<dt>Status</dt><dd style="color: ${sc};">${escapeHtml(a.status)}</dd>`);
+    if (a.applied) detailsRows.push(`<dt>Applied</dt><dd>${formatDate(a.applied)}</dd>`);
+    if (a.nextAction) detailsRows.push(`<dt>Next action</dt><dd>${escapeHtml(a.nextAction)}${a.nextDate ? ` <span class="${rightCls}" style="font-family: var(--font-mono); font-size: 12px;">· ${formatDate(a.nextDate)}</span>` : ''}</dd>`);
+    const detailsHtml = detailsRows.length ? `<dl class="vault-details">${detailsRows.join('')}</dl>` : '';
+    const notesHtml = a.notes ? `<div class="note-content">${renderNoteContent(a.notes)}</div>` : '';
+
+    const titleHtml = a.role
+      ? `${escapeHtml(a.company)} <span style="color: var(--ink-mute); font-weight: 300; margin: 0 4px;">·</span> ${escapeHtml(a.role)}`
+      : escapeHtml(a.company);
+
+    return `
+      <details class="note-card">
+        <summary class="note-summary">
+          <div class="note-meta">
+            <span><span class="accent"></span><span style="color: ${sc}; font-weight: 500;">${escapeHtml(a.status || '—')}</span></span>
+            ${rightLbl ? `<span class="expiry-days ${rightCls}">${rightLbl}</span>` : '<span></span>'}
+          </div>
+          <h3 class="note-title">
+            <span class="note-chevron">›</span>
+            <span>${titleHtml}</span>
+          </h3>
+        </summary>
+        <div class="note-body">
+          ${detailsHtml}
+          ${notesHtml}
+          <div class="note-actions"><button class="btn" onclick="editApp('${a.id}')">Edit</button></div>
+        </div>
+      </details>
+    `;
   }).join('');
 }
 
@@ -2320,26 +2464,52 @@ function renderPeople() {
 
   document.getElementById('people-count').textContent = `${ppl.length} of ${data.people.length}`;
 
-  const tbody = document.getElementById('people-tbody');
+  const wrap = document.getElementById('people-list');
   if (ppl.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5"><div class="empty"><h4>No contacts in this view</h4><p>Your Bangladesh network atrophies three times faster from abroad. Track the people who matter.</p></div></td></tr>`;
+    wrap.innerHTML = `<div class="empty"><h4>No contacts in this view</h4><p>Your Bangladesh network atrophies three times faster from abroad. Track the people who matter.</p></div>`;
     return;
   }
-  tbody.innerHTML = ppl.map(p => {
-    const nf = p.nextFollowup ? daysBetween(p.nextFollowup) : null;
-    let nfCls = '', nfLbl = '—';
-    if (nf !== null) {
-      nfLbl = formatDate(p.nextFollowup);
-      if (nf < 0) nfCls = 'days-crit';
-      else if (nf <= 7) nfCls = 'days-warn';
+
+  wrap.innerHTML = ppl.map(p => {
+    // Right-side meta: next follow-up if available, else last contact
+    let rightLbl = '', rightCls = '';
+    if (p.nextFollowup) {
+      const days = daysBetween(p.nextFollowup);
+      rightLbl = 'Follow up ' + formatDate(p.nextFollowup);
+      if (days < 0) rightCls = 'days-exp';
+      else if (days <= 7) rightCls = 'days-crit';
+      else if (days <= 14) rightCls = 'days-warn';
+    } else if (p.lastContact) {
+      rightLbl = 'Last ' + formatDate(p.lastContact);
     }
-    return `<tr>
-      <td><strong>${escapeHtml(p.name)}</strong>${p.notes ? `<div style="color:var(--ink-mute);font-size:12px;margin-top:4px;">${escapeHtml(p.notes)}</div>` : ''}</td>
-      <td class="col-mobile-hide"><span class="pill">${escapeHtml(p.relationship || '—')}</span></td>
-      <td class="col-mobile-hide">${p.lastContact ? formatDate(p.lastContact) : '—'}</td>
-      <td class="${nfCls}">${nfLbl}</td>
-      <td class="col-action"><button class="btn" onclick="editPerson('${p.id}')">Edit</button></td>
-    </tr>`;
+
+    const detailsRows = [];
+    if (p.relationship) detailsRows.push(`<dt>Relationship</dt><dd>${escapeHtml(p.relationship)}</dd>`);
+    if (p.closeness) detailsRows.push(`<dt>Closeness</dt><dd>${escapeHtml(p.closeness)}</dd>`);
+    if (p.lastContact) detailsRows.push(`<dt>Last contact</dt><dd>${formatDate(p.lastContact)}</dd>`);
+    if (p.nextFollowup) detailsRows.push(`<dt>Follow up</dt><dd><span class="${rightCls}">${formatDate(p.nextFollowup)}</span></dd>`);
+    const detailsHtml = detailsRows.length ? `<dl class="vault-details">${detailsRows.join('')}</dl>` : '';
+    const notesHtml = p.notes ? `<div class="note-content">${renderNoteContent(p.notes)}</div>` : '';
+
+    return `
+      <details class="note-card">
+        <summary class="note-summary">
+          <div class="note-meta">
+            <span><span class="accent"></span>${escapeHtml(p.relationship || 'Contact')}${p.closeness ? ' · ' + escapeHtml(p.closeness) : ''}</span>
+            ${rightLbl ? `<span class="expiry-days ${rightCls}">${rightLbl}</span>` : '<span></span>'}
+          </div>
+          <h3 class="note-title">
+            <span class="note-chevron">›</span>
+            <span>${escapeHtml(p.name)}</span>
+          </h3>
+        </summary>
+        <div class="note-body">
+          ${detailsHtml}
+          ${notesHtml}
+          <div class="note-actions"><button class="btn" onclick="editPerson('${p.id}')">Edit</button></div>
+        </div>
+      </details>
+    `;
   }).join('');
 }
 
