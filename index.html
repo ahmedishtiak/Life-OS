@@ -1029,6 +1029,29 @@ body::before {
   font-size: 12px;
 }
 
+/* Stacked right column: urgency label on top, actual date below */
+.meta-right-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.meta-right-stack .expiry-days {
+  line-height: 1.2;
+}
+.meta-date-actual {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-mute);
+  letter-spacing: 0.02em;
+  text-transform: none;
+  font-weight: 400;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
 /* ── Tasks: done state and quick-action button ────────────────────── */
 .note-card.task-done {
   opacity: 0.55;
@@ -2000,26 +2023,31 @@ function renderTasks() {
     const pc = priorityColor[t.priority] || 'var(--ink-mute)';
     const sc = statusColor[t.status] || 'var(--ink-mute)';
 
-    // Due-date display (in meta right slot)
-    let dueLbl = '', dueCls = '';
+    // Relative urgency label (no inline date — date goes on the line below)
+    let dueLbl = '', dueCls = '', dueDate = '';
     if (t.due) {
       const days = daysBetween(t.due);
+      dueDate = formatDate(t.due);
       if (isDone) {
-        dueLbl = formatDate(t.due);
+        dueLbl = '';
       } else if (days < 0) {
         dueLbl = 'Overdue ' + Math.abs(days) + 'd';
         dueCls = 'days-exp';
       } else if (days === 0) {
-        dueLbl = 'Due today';
+        dueLbl = 'Today';
         dueCls = 'days-crit';
       } else if (days === 1) {
-        dueLbl = 'Due tomorrow';
+        dueLbl = 'Tomorrow';
         dueCls = 'days-crit';
       } else if (days <= 7) {
-        dueLbl = 'Due ' + formatDate(t.due);
+        dueLbl = 'In ' + days + 'd';
         dueCls = 'days-warn';
+      } else if (days <= 30) {
+        dueLbl = 'In ' + days + 'd';
+      } else if (days <= 365) {
+        dueLbl = 'In ' + Math.round(days / 7) + 'w';
       } else {
-        dueLbl = 'Due ' + formatDate(t.due);
+        dueLbl = 'In ' + (Math.round(days / 365 * 10) / 10) + 'y';
       }
     }
 
@@ -2032,12 +2060,23 @@ function renderTasks() {
     const detailsHtml = detailsRows.length ? `<dl class="vault-details">${detailsRows.join('')}</dl>` : '';
     const notesHtml = t.notes ? `<div class="note-content">${renderNoteContent(t.notes)}</div>` : '';
 
+    // Right column: stack urgency + actual date when due is set
+    let rightHtml;
+    if (dueLbl || dueDate) {
+      rightHtml = `<div class="meta-right-stack">
+        ${dueLbl ? `<span class="expiry-days ${dueCls}">${dueLbl}</span>` : ''}
+        ${dueDate ? `<span class="meta-date-actual">${dueDate}</span>` : ''}
+      </div>`;
+    } else {
+      rightHtml = '<span></span>';
+    }
+
     return `
       <details class="note-card${isDone ? ' task-done' : ''}">
         <summary class="note-summary">
           <div class="note-meta">
             <span><span class="accent"></span><span style="color: ${pc}; font-weight: 600;">${t.priority || 'P4'}</span> · <span style="color: ${sc};">${escapeHtml(t.status || '')}</span>${t.area ? ' · ' + escapeHtml(t.area) : ''}</span>
-            ${dueLbl ? `<span class="expiry-days ${dueCls}">${dueLbl}</span>` : '<span></span>'}
+            ${rightHtml}
           </div>
           <h3 class="note-title with-action">
             <span class="note-chevron">›</span>
@@ -2074,9 +2113,19 @@ function renderDeadlines() {
   const items = [...data.deadlines]
     .map(d => {
       const triggerDate = d.startDate || d.expiry;
-      return { ...d, days: daysBetween(triggerDate) };
+      return { ...d, days: daysBetween(triggerDate), triggerDate };
     })
-    .sort((a, b) => (a.days ?? 99999) - (b.days ?? 99999));
+    .sort((a, b) => {
+      // Expired items go to the bottom
+      const aExp = a.days !== null && a.days < 0;
+      const bExp = b.days !== null && b.days < 0;
+      if (aExp && !bExp) return 1;
+      if (!aExp && bExp) return -1;
+      // Both expired: most recently expired first (closer to 0)
+      if (aExp && bExp) return b.days - a.days;
+      // Both upcoming: soonest first
+      return (a.days ?? 99999) - (b.days ?? 99999);
+    });
   document.getElementById('deadline-count').textContent = `${items.length} tracked`;
   const wrap = document.getElementById('deadlines-list');
 
@@ -2099,6 +2148,9 @@ function renderDeadlines() {
       else { cls = 'days-ok'; badgeLbl = (Math.round(d.days / 365 * 10) / 10) + 'y'; }
     }
 
+    // Actual date for the secondary line in the right column
+    const dateActual = d.triggerDate ? formatDate(d.triggerDate) : '';
+
     // Build the expanded details block
     const detailsRows = [];
     const whenLine = formatDeadlineWhenInline(d);
@@ -2119,7 +2171,10 @@ function renderDeadlines() {
         <summary class="note-summary">
           <div class="note-meta">
             <span><span class="accent"></span>${escapeHtml(d.category || 'Other')}${d.country ? ' · ' + escapeHtml(d.country) : ''}</span>
-            <span class="expiry-days ${cls}">${badgeLbl}</span>
+            <div class="meta-right-stack">
+              <span class="expiry-days ${cls}">${badgeLbl}</span>
+              ${dateActual ? `<span class="meta-date-actual">${dateActual}</span>` : ''}
+            </div>
           </div>
           <h3 class="note-title">
             <span class="note-chevron">›</span>
@@ -2593,10 +2648,17 @@ function renderVault() {
   const filter = document.getElementById('vault-filter').value;
   let docs = [...data.vault];
   if (filter !== 'all') docs = docs.filter(d => d.category === filter);
-  // Sort: expiring soonest first (with no-expiry items at the end), then by name
+  // Compute days for sort
+  docs = docs.map(d => ({ ...d, days: d.expiry ? daysBetween(d.expiry) : null }));
+  // Sort: expired to bottom, then by days ascending, then by name
   docs.sort((a, b) => {
-    const da = a.expiry ? daysBetween(a.expiry) : 99999;
-    const db = b.expiry ? daysBetween(b.expiry) : 99999;
+    const aExp = a.days !== null && a.days < 0;
+    const bExp = b.days !== null && b.days < 0;
+    if (aExp && !bExp) return 1;
+    if (!aExp && bExp) return -1;
+    if (aExp && bExp) return b.days - a.days; // most recently expired first
+    const da = a.days !== null ? a.days : 99999;
+    const db = b.days !== null ? b.days : 99999;
     if (da !== db) return da - db;
     return (a.name || '').localeCompare(b.name || '');
   });
@@ -2609,7 +2671,7 @@ function renderVault() {
   }
 
   wrap.innerHTML = docs.map(d => {
-    const exp = d.expiry ? daysBetween(d.expiry) : null;
+    const exp = d.days;
     let expCls = '', expLbl = '';
     if (exp !== null) {
       if (exp < 0) { expCls = 'days-exp'; expLbl = 'Expired'; }
@@ -2619,6 +2681,9 @@ function renderVault() {
       else if (exp <= 365) { expCls = 'days-watch'; expLbl = Math.round(exp / 30) + 'mo'; }
       else { expCls = 'days-ok'; expLbl = (Math.round(exp / 365 * 10) / 10) + 'y'; }
     }
+
+    // Actual date for the secondary line in the right column
+    const dateActual = d.expiry ? formatDate(d.expiry) : '';
 
     const detailsRows = [];
     if (d.location) detailsRows.push(`<dt>Location</dt><dd class="vault-location">${escapeHtml(d.location)}</dd>`);
@@ -2631,12 +2696,23 @@ function renderVault() {
       ? `<div class="note-content">${renderNoteContent(d.notes)}</div>`
       : '';
 
+    // Build right column: stack urgency + actual date (or empty placeholder if neither)
+    let rightHtml;
+    if (expLbl || dateActual) {
+      rightHtml = `<div class="meta-right-stack">
+        ${expLbl ? `<span class="expiry-days ${expCls}">${expLbl}</span>` : ''}
+        ${dateActual ? `<span class="meta-date-actual">${dateActual}</span>` : ''}
+      </div>`;
+    } else {
+      rightHtml = '<span></span>';
+    }
+
     return `
       <details class="note-card">
         <summary class="note-summary">
           <div class="note-meta">
             <span><span class="accent"></span>${escapeHtml(d.category || 'Other')}</span>
-            ${expLbl ? `<span class="expiry-days ${expCls}">${expLbl}</span>` : '<span></span>'}
+            ${rightHtml}
           </div>
           <h3 class="note-title">
             <span class="note-chevron">›</span>
