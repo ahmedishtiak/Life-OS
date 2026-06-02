@@ -956,6 +956,53 @@ body::before {
   margin-top: 14px;
 }
 
+/* ── Backup history (Settings) ─────────────────────────────────────── */
+.backup-history {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 10px 18px;
+  padding: 16px 0 0;
+  margin: 18px 0 0;
+  border-top: 1px solid var(--rule-soft);
+  font-size: 13px;
+}
+.backup-history dt {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  padding-top: 2px;
+}
+.backup-history dd {
+  margin: 0;
+  color: var(--ink-soft);
+}
+.backup-history dd strong {
+  color: var(--ink);
+  font-weight: 500;
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+  font-size: 13px;
+}
+.backup-history dd .device,
+.backup-history dd .device-source {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-mute);
+  letter-spacing: 0.02em;
+  margin-top: 3px;
+  line-height: 1.4;
+}
+.backup-history dd .device-source {
+  color: var(--teal);
+  opacity: 0.8;
+}
+.backup-history dd.never {
+  color: var(--ink-mute);
+  font-style: italic;
+}
+
 /* ── Dates in meta line — natural case, not uppercase ─────────────── */
 .note-meta .expiry-days {
   text-transform: none;
@@ -1466,13 +1513,6 @@ footer a:hover { color: var(--ink); border-color: var(--ink); }
     </div>
 
     <div class="card" style="margin-bottom: 20px;">
-      <div class="card-label"><span><span class="accent"></span>Your name</span></div>
-      <input type="text" id="settings-name" placeholder="Your name" style="width: 100%; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 2px; background: var(--paper); color: var(--ink); font-family: var(--font-body); font-size: 14px; margin-bottom: 10px;">
-      <input type="text" id="settings-location" placeholder="City (e.g., Espoo)" style="width: 100%; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 2px; background: var(--paper); color: var(--ink); font-family: var(--font-body); font-size: 14px; margin-bottom: 10px;">
-      <button class="btn primary" onclick="saveSettings()">Save</button>
-    </div>
-
-    <div class="card" style="margin-bottom: 20px;">
       <div class="card-label"><span><span class="accent"></span>Backup</span></div>
       <h3 style="margin-bottom: 12px;">Export &amp; import</h3>
       <p style="font-size: 14px; color: var(--ink-soft); margin-bottom: 16px;">Download all your data as JSON. Restore on a new device or browser by importing it back.</p>
@@ -1481,6 +1521,7 @@ footer a:hover { color: var(--ink); border-color: var(--ink); }
         <button class="btn" onclick="document.getElementById('import-file').click()">Import JSON</button>
         <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importData(event)">
       </div>
+      <dl id="backup-history" class="backup-history"></dl>
     </div>
 
     <div class="card" style="margin-bottom: 20px;">
@@ -2686,17 +2727,38 @@ function editVault(id) { openModal('vault', id); }
 
 // ── SETTINGS ────────────────────────────────────────────────────────
 function renderSettings() {
-  document.getElementById('settings-name').value = data.meta.name || '';
-  document.getElementById('settings-location').value = data.meta.location || '';
   updateStorageStats();
+  renderBackupHistory();
 }
 
-function saveSettings() {
-  data.meta.name = document.getElementById('settings-name').value.trim() || 'friend';
-  data.meta.location = document.getElementById('settings-location').value.trim() || '';
-  saveData();
-  toast('Settings saved');
-  renderToday();
+function renderBackupHistory() {
+  const wrap = document.getElementById('backup-history');
+  if (!wrap) return;
+  const exp = data.meta.lastExport;
+  const imp = data.meta.lastImport;
+
+  let html = '';
+
+  html += `<dt>Last export</dt>`;
+  if (exp && exp.at) {
+    html += `<dd><strong>${formatTimestamp(exp.at)}</strong><div class="device">${escapeHtml(exp.device || 'Unknown device')}</div></dd>`;
+  } else {
+    html += `<dd class="never">Never</dd>`;
+  }
+
+  html += `<dt>Last import</dt>`;
+  if (imp && imp.at) {
+    let source = '';
+    if (imp.fromExportAt || imp.fromDevice) {
+      source = `<div class="device-source">from ${escapeHtml(imp.fromDevice || 'unknown device')}` +
+               (imp.fromExportAt ? ` · exported ${formatTimestamp(imp.fromExportAt)}` : '') + `</div>`;
+    }
+    html += `<dd><strong>${formatTimestamp(imp.at)}</strong><div class="device">on ${escapeHtml(imp.device || 'this device')}</div>${source}</dd>`;
+  } else {
+    html += `<dd class="never">Never</dd>`;
+  }
+
+  wrap.innerHTML = html;
 }
 
 function updateStorageStats() {
@@ -2710,7 +2772,42 @@ function updateStorageStats() {
   if (iEl) iEl.textContent = items;
 }
 
+// Detect device name from user agent — "iPhone · Safari", "Windows · Chrome", etc.
+function detectDevice() {
+  const ua = navigator.userAgent;
+  let os = 'Unknown';
+  if (/iPhone|iPod/.test(ua)) os = 'iPhone';
+  else if (/iPad/.test(ua)) os = 'iPad';
+  else if (/Android/.test(ua)) os = 'Android';
+  else if (/Windows/.test(ua)) os = 'Windows';
+  else if (/Macintosh/.test(ua)) os = 'Mac';
+  else if (/Linux/.test(ua)) os = 'Linux';
+
+  let browser = '';
+  if (/Edg\//.test(ua)) browser = 'Edge';
+  else if (/OPR\//.test(ua) || /Opera/.test(ua)) browser = 'Opera';
+  else if (/Brave/i.test(ua)) browser = 'Brave';
+  else if (/Chrome\//.test(ua)) browser = 'Chrome';
+  else if (/Firefox\//.test(ua)) browser = 'Firefox';
+  else if (/Safari/.test(ua)) browser = 'Safari';
+
+  return browser ? `${os} · ${browser}` : os;
+}
+
+// Format an ISO timestamp as "30 May 2026, 14:32"
+function formatTimestamp(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+    + ', ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
 function exportData() {
+  // Record export metadata before serialising so the file contains it
+  data.meta.lastExport = { at: new Date().toISOString(), device: detectDevice() };
+  saveData();
+
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -2719,6 +2816,7 @@ function exportData() {
   a.click();
   URL.revokeObjectURL(url);
   toast('Exported');
+  renderBackupHistory();
 }
 
 function importData(event) {
@@ -2730,6 +2828,14 @@ function importData(event) {
     try {
       const imported = JSON.parse(e.target.result);
       data = Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_DATA)), imported);
+      // Record import metadata, preserving info about the source file's export
+      const sourceExport = (imported.meta && imported.meta.lastExport) || null;
+      data.meta.lastImport = {
+        at: new Date().toISOString(),
+        device: detectDevice(),
+        fromExportAt: sourceExport ? sourceExport.at : null,
+        fromDevice: sourceExport ? sourceExport.device : null
+      };
       saveData();
       toast('Imported successfully');
       route();
