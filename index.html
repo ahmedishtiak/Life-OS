@@ -1115,6 +1115,135 @@ body::before {
   background: var(--paper);
 }
 
+/* ── Cup (World Cup 2026 schedule) ────────────────────────────────── */
+.cup-day-card {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.cup-day-card.is-today {
+  border-color: var(--teal);
+  border-width: 1.5px;
+}
+.cup-day-card.past {
+  opacity: 0.55;
+}
+
+.cup-day-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 22px 14px;
+  border-bottom: 1px solid var(--rule-soft);
+  background: var(--paper-2);
+}
+.cup-day-card.is-today .cup-day-head {
+  background: color-mix(in srgb, var(--teal) 8%, var(--paper-2));
+}
+.cup-day-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 17px;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+  font-variation-settings: 'opsz' 20;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.cup-day-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 2px;
+  font-weight: 500;
+}
+.cup-day-badge.today {
+  background: var(--teal);
+  color: var(--paper);
+}
+.cup-day-badge.tomorrow {
+  background: var(--paper);
+  color: var(--teal);
+  border: 1px solid var(--teal);
+}
+.cup-day-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+
+.cup-day-matches {
+  padding: 0;
+}
+.cup-match {
+  display: grid;
+  grid-template-columns: 70px 1fr;
+  gap: 6px 18px;
+  align-items: baseline;
+  padding: 14px 22px;
+  border-bottom: 1px solid var(--rule-soft);
+}
+.cup-match:last-child { border-bottom: 0; }
+.cup-time {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.cup-teams {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 16px;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+  line-height: 1.3;
+  font-variation-settings: 'opsz' 20;
+}
+.cup-team.tbd {
+  color: var(--ink-mute);
+  font-style: italic;
+  font-weight: 400;
+}
+.cup-vs {
+  margin: 0 8px;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 300;
+  color: var(--ink-mute);
+  font-size: 14px;
+}
+.cup-info {
+  grid-column: 2;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-top: 2px;
+}
+
+/* Compact form for Today widget */
+.cup-match.compact {
+  padding: 10px 0;
+  grid-template-columns: 56px 1fr;
+}
+.cup-match.compact:first-child { padding-top: 4px; }
+.cup-match.compact .cup-time {
+  font-size: 13px;
+}
+.cup-match.compact .cup-teams {
+  font-size: 15px;
+}
+
 /* ── Footer ─────────────────────────────────────────────────────────── */
 footer {
   border-top: 1px solid var(--rule);
@@ -1198,6 +1327,7 @@ footer a:hover { color: var(--ink); border-color: var(--ink); }
     <a href="#people" data-route="people">People</a>
     <a href="#notes" data-route="notes">Notes</a>
     <a href="#vault" data-route="vault">Vault</a>
+    <a href="#cup" data-route="cup">Cup</a>
     <a href="#settings" data-route="settings">Settings</a>
   </nav>
 </header>
@@ -1217,6 +1347,7 @@ footer a:hover { color: var(--ink); border-color: var(--ink); }
     </div>
 
     <div id="welcome-panel"></div>
+    <div id="today-cup"></div>
 
     <div class="grid grid-asym" style="margin-bottom: 32px;">
       <div class="card">
@@ -1495,6 +1626,36 @@ footer a:hover { color: var(--ink); border-color: var(--ink); }
     </div>
   </section>
 
+  <!-- ── CUP (World Cup 2026 schedule) ───────────────────────── -->
+  <section class="page" id="page-cup">
+    <div class="section-head">
+      <h2>World Cup 2026</h2>
+      <span class="meta">Canada · Mexico · USA · 11 June – 19 July</span>
+    </div>
+    <div class="toolbar">
+      <select id="cup-filter" onchange="renderCup()">
+        <option value="upcoming">Upcoming</option>
+        <option value="today">Today &amp; tomorrow</option>
+        <option value="week">Next 7 days</option>
+        <option value="all">All matches</option>
+        <option value="past">Past</option>
+      </select>
+      <select id="cup-stage" onchange="renderCup()">
+        <option value="all">All stages</option>
+        <option value="group">Group stage</option>
+        <option value="knockout">Knockout</option>
+      </select>
+      <div class="right">
+        <span class="meta" id="cup-count">—</span>
+      </div>
+    </div>
+    <div id="cup-list" style="display: flex; flex-direction: column; gap: 18px;"></div>
+    <div class="welcome" style="margin-top: 32px;">
+      <h3>About these times</h3>
+      <p>Match times follow the source schedule — typically Central European Time. For your local time in Helsinki, add 1 hour during European summer time. A match listed at 21:00 is therefore 22:00 in Helsinki.</p>
+    </div>
+  </section>
+
   <!-- ── SETTINGS ──────────────────────────────────────────────── -->
   <section class="page" id="page-settings">
     <div class="section-head">
@@ -1705,8 +1866,261 @@ const QUOTES = [
   { text: '"Sisu — to keep going when there\'s no reason to keep going."', attr: '— Finnish proverb' }
 ];
 
-// ── Routing ─────────────────────────────────────────────────────────
-const ROUTE_ALIASES = { knowledge: 'notes' }; // backward compat for renamed routes
+// ── World Cup 2026 schedule ───────────────────────────────────────
+// 104 matches
+const MATCHES = [
+  {n:1,s:"Group A",d:"2026-06-11T21:00",v:"Mexico City",a:"Mexico",b:"South Africa"},
+  {n:2,s:"Group A",d:"2026-06-12T04:00",v:"Guadalajara",a:"Rep. of Korea",b:"Czech Rep."},
+  {n:3,s:"Group B",d:"2026-06-12T21:00",v:"Toronto",a:"Canada",b:"Bosnia/Herzeg."},
+  {n:4,s:"Group D",d:"2026-06-13T03:00",v:"Los Angeles",a:"USA",b:"Paraguay"},
+  {n:5,s:"Group C",d:"2026-06-14T03:00",v:"Boston",a:"Haiti",b:"Scotland"},
+  {n:6,s:"Group D",d:"2026-06-14T06:00",v:"Vancouver",a:"Australia",b:"Turkey"},
+  {n:7,s:"Group C",d:"2026-06-14T00:00",v:"New York/New Jersey",a:"Brazil",b:"Morocco"},
+  {n:8,s:"Group B",d:"2026-06-13T21:00",v:"San Francisco Bay Area",a:"Qatar",b:"Switzerland"},
+  {n:9,s:"Group E",d:"2026-06-15T01:00",v:"Philadelphia",a:"Ivory Coast",b:"Ecuador"},
+  {n:10,s:"Group E",d:"2026-06-14T19:00",v:"Houston",a:"Germany",b:"Curaçao"},
+  {n:11,s:"Group F",d:"2026-06-14T22:00",v:"Dallas",a:"Netherlands",b:"Japan"},
+  {n:12,s:"Group F",d:"2026-06-15T04:00",v:"Monterrey",a:"Sweden",b:"Tunisia"},
+  {n:13,s:"Group H",d:"2026-06-16T00:00",v:"Miami",a:"Saudi Arabia",b:"Uruguay"},
+  {n:14,s:"Group H",d:"2026-06-15T18:00",v:"Atlanta",a:"Spain",b:"Cape Verde"},
+  {n:15,s:"Group G",d:"2026-06-16T03:00",v:"Los Angeles",a:"IR Iran",b:"New Zealand"},
+  {n:16,s:"Group G",d:"2026-06-15T21:00",v:"Seattle",a:"Belgium",b:"Egypt"},
+  {n:17,s:"Group I",d:"2026-06-16T21:00",v:"New York/New Jersey",a:"France",b:"Senegal"},
+  {n:18,s:"Group I",d:"2026-06-17T00:00",v:"Boston",a:"Iraq",b:"Norway"},
+  {n:19,s:"Group J",d:"2026-06-17T03:00",v:"Kansas City",a:"Argentina",b:"Algeria"},
+  {n:20,s:"Group J",d:"2026-06-17T06:00",v:"San Francisco Bay Area",a:"Austria",b:"Jordan"},
+  {n:21,s:"Group L",d:"2026-06-18T01:00",v:"Toronto",a:"Ghana",b:"Panama"},
+  {n:22,s:"Group L",d:"2026-06-17T22:00",v:"Dallas",a:"England",b:"Croatia"},
+  {n:23,s:"Group K",d:"2026-06-17T19:00",v:"Houston",a:"Portugal",b:"DR Congo"},
+  {n:24,s:"Group K",d:"2026-06-18T04:00",v:"Mexico City",a:"Uzbekistan",b:"Colombia"},
+  {n:25,s:"Group A",d:"2026-06-18T18:00",v:"Atlanta",a:"Czech Rep.",b:"South Africa"},
+  {n:26,s:"Group B",d:"2026-06-18T21:00",v:"Los Angeles",a:"Switzerland",b:"Bosnia/Herzeg."},
+  {n:27,s:"Group B",d:"2026-06-19T00:00",v:"Vancouver",a:"Canada",b:"Qatar"},
+  {n:28,s:"Group A",d:"2026-06-19T03:00",v:"Guadalajara",a:"Mexico",b:"Rep. of Korea"},
+  {n:29,s:"Group C",d:"2026-06-20T02:30",v:"Philadelphia",a:"Brazil",b:"Haiti"},
+  {n:30,s:"Group C",d:"2026-06-20T00:00",v:"Boston",a:"Scotland",b:"Morocco"},
+  {n:31,s:"Group D",d:"2026-06-20T05:00",v:"San Francisco Bay Area",a:"Turkey",b:"Paraguay"},
+  {n:32,s:"Group D",d:"2026-06-19T21:00",v:"Seattle",a:"USA",b:"Australia"},
+  {n:33,s:"Group E",d:"2026-06-20T22:00",v:"Toronto",a:"Germany",b:"Ivory Coast"},
+  {n:34,s:"Group E",d:"2026-06-21T02:00",v:"Kansas City",a:"Ecuador",b:"Curaçao"},
+  {n:35,s:"Group F",d:"2026-06-20T19:00",v:"Houston",a:"Netherlands",b:"Sweden"},
+  {n:36,s:"Group F",d:"2026-06-21T06:00",v:"Monterrey",a:"Tunisia",b:"Japan"},
+  {n:37,s:"Group H",d:"2026-06-22T00:00",v:"Miami",a:"Uruguay",b:"Cape Verde"},
+  {n:38,s:"Group H",d:"2026-06-21T18:00",v:"Atlanta",a:"Spain",b:"Saudi Arabia"},
+  {n:39,s:"Group G",d:"2026-06-21T21:00",v:"Los Angeles",a:"Belgium",b:"IR Iran"},
+  {n:40,s:"Group G",d:"2026-06-22T03:00",v:"Vancouver",a:"New Zealand",b:"Egypt"},
+  {n:41,s:"Group I",d:"2026-06-23T02:00",v:"New York/New Jersey",a:"Norway",b:"Senegal"},
+  {n:42,s:"Group I",d:"2026-06-22T23:00",v:"Philadelphia",a:"France",b:"Iraq"},
+  {n:43,s:"Group J",d:"2026-06-22T19:00",v:"Dallas",a:"Argentina",b:"Austria"},
+  {n:44,s:"Group J",d:"2026-06-23T05:00",v:"San Francisco Bay Area",a:"Jordan",b:"Algeria"},
+  {n:45,s:"Group L",d:"2026-06-23T22:00",v:"Boston",a:"England",b:"Ghana"},
+  {n:46,s:"Group L",d:"2026-06-24T01:00",v:"Toronto",a:"Panama",b:"Croatia"},
+  {n:47,s:"Group K",d:"2026-06-23T19:00",v:"Houston",a:"Portugal",b:"Uzbekistan"},
+  {n:48,s:"Group K",d:"2026-06-24T04:00",v:"Guadalajara",a:"Colombia",b:"DR Congo"},
+  {n:49,s:"Group C",d:"2026-06-25T00:00",v:"Miami",a:"Scotland",b:"Brazil"},
+  {n:50,s:"Group C",d:"2026-06-25T00:00",v:"Atlanta",a:"Morocco",b:"Haiti"},
+  {n:51,s:"Group B",d:"2026-06-24T21:00",v:"Vancouver",a:"Switzerland",b:"Canada"},
+  {n:52,s:"Group B",d:"2026-06-24T21:00",v:"Seattle",a:"Bosnia/Herzeg.",b:"Qatar"},
+  {n:53,s:"Group A",d:"2026-06-25T03:00",v:"Mexico City",a:"Czech Rep.",b:"Mexico"},
+  {n:54,s:"Group A",d:"2026-06-25T03:00",v:"Monterrey",a:"South Africa",b:"Rep. of Korea"},
+  {n:55,s:"Group E",d:"2026-06-25T22:00",v:"Philadelphia",a:"Curaçao",b:"Ivory Coast"},
+  {n:56,s:"Group E",d:"2026-06-25T22:00",v:"New York/New Jersey",a:"Ecuador",b:"Germany"},
+  {n:57,s:"Group F",d:"2026-06-26T01:00",v:"Dallas",a:"Japan",b:"Sweden"},
+  {n:58,s:"Group F",d:"2026-06-26T01:00",v:"Kansas City",a:"Tunisia",b:"Netherlands"},
+  {n:59,s:"Group D",d:"2026-06-26T04:00",v:"Los Angeles",a:"Turkey",b:"USA"},
+  {n:60,s:"Group D",d:"2026-06-26T04:00",v:"San Francisco Bay Area",a:"Paraguay",b:"Australia"},
+  {n:61,s:"Group I",d:"2026-06-26T21:00",v:"Boston",a:"Norway",b:"France"},
+  {n:62,s:"Group I",d:"2026-06-26T21:00",v:"Toronto",a:"Senegal",b:"Iraq"},
+  {n:63,s:"Group G",d:"2026-06-27T05:00",v:"Seattle",a:"Egypt",b:"IR Iran"},
+  {n:64,s:"Group G",d:"2026-06-27T05:00",v:"Vancouver",a:"New Zealand",b:"Belgium"},
+  {n:65,s:"Group H",d:"2026-06-27T02:00",v:"Houston",a:"Cape Verde",b:"Saudi Arabia"},
+  {n:66,s:"Group H",d:"2026-06-27T02:00",v:"Guadalajara",a:"Uruguay",b:"Spain"},
+  {n:67,s:"Group L",d:"2026-06-27T23:00",v:"New York/New Jersey",a:"Panama",b:"England"},
+  {n:68,s:"Group L",d:"2026-06-27T23:00",v:"Philadelphia",a:"Croatia",b:"Ghana"},
+  {n:69,s:"Group J",d:"2026-06-28T04:00",v:"Kansas City",a:"Algeria",b:"Austria"},
+  {n:70,s:"Group J",d:"2026-06-28T04:00",v:"Dallas",a:"Jordan",b:"Argentina"},
+  {n:71,s:"Group K",d:"2026-06-28T01:30",v:"Miami",a:"Colombia",b:"Portugal"},
+  {n:72,s:"Group K",d:"2026-06-28T01:30",v:"Atlanta",a:"DR Congo",b:"Uzbekistan"},
+  {n:73,s:"Round of 32",d:"2026-06-28T21:00",v:"Los Angeles",a:"2A",b:"2B"},
+  {n:74,s:"Round of 32",d:"2026-06-29T22:30",v:"Boston",a:"1E",b:"3-ABCDF"},
+  {n:75,s:"Round of 32",d:"2026-06-30T03:00",v:"Monterrey",a:"1F",b:"2C"},
+  {n:76,s:"Round of 32",d:"2026-06-29T19:00",v:"Houston",a:"1C",b:"2F"},
+  {n:77,s:"Round of 32",d:"2026-06-30T23:00",v:"New York/New Jersey",a:"1I",b:"3-CDFGH"},
+  {n:78,s:"Round of 32",d:"2026-06-30T19:00",v:"Dallas",a:"2E",b:"2I"},
+  {n:79,s:"Round of 32",d:"2026-07-01T03:00",v:"Mexico City",a:"1A",b:"3-CEFHI"},
+  {n:80,s:"Round of 32",d:"2026-07-01T18:00",v:"Atlanta",a:"1L",b:"3-EHIJK"},
+  {n:81,s:"Round of 32",d:"2026-07-02T02:00",v:"San Francisco Bay Area",a:"1D",b:"3-BEFIJ"},
+  {n:82,s:"Round of 32",d:"2026-07-01T22:00",v:"Seattle",a:"1G",b:"3-AEHIJ"},
+  {n:83,s:"Round of 32",d:"2026-07-03T01:00",v:"Toronto",a:"2K",b:"2L"},
+  {n:84,s:"Round of 32",d:"2026-07-02T21:00",v:"Los Angeles",a:"1H",b:"2J"},
+  {n:85,s:"Round of 32",d:"2026-07-03T05:00",v:"Vancouver",a:"1B",b:"3-EFGIJ"},
+  {n:86,s:"Round of 32",d:"2026-07-04T00:00",v:"Miami",a:"1J",b:"2H"},
+  {n:87,s:"Round of 32",d:"2026-07-04T03:30",v:"Kansas City",a:"1K",b:"3-DEIJL"},
+  {n:88,s:"Round of 32",d:"2026-07-03T20:00",v:"Dallas",a:"2D",b:"2G"},
+  {n:89,s:"Round of 16",d:"2026-07-04T23:00",v:"Philadelphia",a:"W74",b:"W77"},
+  {n:90,s:"Round of 16",d:"2026-07-04T19:00",v:"Houston",a:"W73",b:"W75"},
+  {n:91,s:"Round of 16",d:"2026-07-05T22:00",v:"New York/New Jersey",a:"W76",b:"W78"},
+  {n:92,s:"Round of 16",d:"2026-07-06T02:00",v:"Mexico City",a:"W79",b:"W80"},
+  {n:93,s:"Round of 16",d:"2026-07-06T21:00",v:"Dallas",a:"W83",b:"W84"},
+  {n:94,s:"Round of 16",d:"2026-07-07T02:00",v:"Seattle",a:"W81",b:"W82"},
+  {n:95,s:"Round of 16",d:"2026-07-07T18:00",v:"Atlanta",a:"W86",b:"W88"},
+  {n:96,s:"Round of 16",d:"2026-07-07T22:00",v:"Vancouver",a:"W85",b:"W87"},
+  {n:97,s:"Quarter-final",d:"2026-07-09T22:00",v:"Boston",a:"W89",b:"W90"},
+  {n:98,s:"Quarter-final",d:"2026-07-10T21:00",v:"Los Angeles",a:"W93",b:"W94"},
+  {n:99,s:"Quarter-final",d:"2026-07-11T23:00",v:"Miami",a:"W91",b:"W92"},
+  {n:100,s:"Quarter-final",d:"2026-07-12T03:00",v:"Kansas City",a:"W95",b:"W96"},
+  {n:101,s:"Semi-final",d:"2026-07-14T21:00",v:"Dallas",a:"W97",b:"W98"},
+  {n:102,s:"Semi-final",d:"2026-07-15T21:00",v:"Atlanta",a:"W99",b:"W100"},
+  {n:103,s:"Third place",d:"2026-07-18T23:00",v:"Miami",a:"RU101",b:"RU102"},
+  {n:104,s:"Final",d:"2026-07-19T21:00",v:"New York/New Jersey",a:"W101",b:"W102"},
+];
+
+
+
+// ── CUP (World Cup 2026) ────────────────────────────────────────────
+function parseMatchDate(d) {
+  // d is like "2026-06-11T21" or "2026-06-11T21:00" or "2026-06-11T21:30"
+  let iso = d;
+  if (/T\d{2}$/.test(iso)) iso += ':00';
+  return new Date(iso);
+}
+
+function formatMatchDay(d) {
+  return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function formatMatchTime(d) {
+  return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
+function isPlaceholderTeam(t) {
+  // Group-stage teams are real names; knockout starts as "1A", "2B", "W74", "3-ABCDF", "RU101"
+  return /^([12]?[A-L]|[123W]\d+|3-[A-L]+|RU\d+|W101|W102)$/.test(t);
+}
+
+function renderCup() {
+  const filterMode = document.getElementById('cup-filter').value;
+  const stageFilter = document.getElementById('cup-stage').value;
+  const wrap = document.getElementById('cup-list');
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const tomorrowEnd = new Date(todayStart); tomorrowEnd.setDate(tomorrowEnd.getDate() + 2);
+  const weekEnd = new Date(todayStart); weekEnd.setDate(weekEnd.getDate() + 7);
+
+  let items = MATCHES.map(m => ({ ...m, dt: parseMatchDate(m.d) }));
+
+  if (stageFilter === 'group') items = items.filter(m => m.s.startsWith('Group'));
+  else if (stageFilter === 'knockout') items = items.filter(m => !m.s.startsWith('Group'));
+
+  switch (filterMode) {
+    case 'upcoming': items = items.filter(m => m.dt >= todayStart); break;
+    case 'today':    items = items.filter(m => m.dt >= todayStart && m.dt < tomorrowEnd); break;
+    case 'week':     items = items.filter(m => m.dt >= todayStart && m.dt < weekEnd); break;
+    case 'past':     items = items.filter(m => m.dt < todayStart); items.reverse(); break;
+    // 'all' → no filter
+  }
+
+  items.sort((a, b) => a.dt - b.dt);
+  document.getElementById('cup-count').textContent = `${items.length} of ${MATCHES.length}`;
+
+  if (items.length === 0) {
+    wrap.innerHTML = `<div class="empty"><h4>No matches in this view</h4><p>Try another filter.</p></div>`;
+    return;
+  }
+
+  // Group by day
+  const byDay = {};
+  items.forEach(m => {
+    const key = m.dt.toISOString().slice(0, 10);
+    if (!byDay[key]) byDay[key] = [];
+    byDay[key].push(m);
+  });
+
+  const dayKeys = Object.keys(byDay).sort();
+  if (filterMode === 'past') dayKeys.reverse();
+
+  const todayKey = todayStart.toISOString().slice(0, 10);
+  const tomorrowKey = new Date(todayStart.getTime() + 86400000).toISOString().slice(0, 10);
+
+  wrap.innerHTML = dayKeys.map(key => {
+    const dayMatches = byDay[key];
+    const dayDate = new Date(key + 'T00:00:00');
+    let dayLabel = formatMatchDay(dayDate);
+    let dayBadge = '';
+    if (key === todayKey) dayBadge = '<span class="cup-day-badge today">Today</span>';
+    else if (key === tomorrowKey) dayBadge = '<span class="cup-day-badge tomorrow">Tomorrow</span>';
+    const isPast = dayDate < todayStart;
+
+    const matchRows = dayMatches.map(m => {
+      const stageShort = m.s.startsWith('Group') ? m.s : m.s;
+      const t1 = escapeHtml(m.a);
+      const t2 = escapeHtml(m.b);
+      const t1IsTBD = isPlaceholderTeam(m.a);
+      const t2IsTBD = isPlaceholderTeam(m.b);
+      const t1Cls = t1IsTBD ? 'cup-team tbd' : 'cup-team';
+      const t2Cls = t2IsTBD ? 'cup-team tbd' : 'cup-team';
+      return `
+        <div class="cup-match">
+          <div class="cup-time">${formatMatchTime(m.dt)}</div>
+          <div class="cup-teams">
+            <span class="${t1Cls}">${t1}</span>
+            <span class="cup-vs">v</span>
+            <span class="${t2Cls}">${t2}</span>
+          </div>
+          <div class="cup-info">
+            <span>${escapeHtml(m.s)}</span> · <span>${escapeHtml(m.v)}</span> · <span>№ ${m.n}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="cup-day-card${isPast ? ' past' : ''}${key === todayKey ? ' is-today' : ''}">
+        <div class="cup-day-head">
+          <div class="cup-day-title">${dayLabel} ${dayBadge}</div>
+          <div class="cup-day-count">${dayMatches.length} match${dayMatches.length === 1 ? '' : 'es'}</div>
+        </div>
+        <div class="cup-day-matches">${matchRows}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Today-page widget: returns HTML for today's matches, or empty string if none
+function renderTodayCupWidget() {
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const tomorrowEnd = new Date(todayStart); tomorrowEnd.setDate(tomorrowEnd.getDate() + 1);
+
+  const todayMatches = MATCHES
+    .map(m => ({ ...m, dt: parseMatchDate(m.d) }))
+    .filter(m => m.dt >= todayStart && m.dt < tomorrowEnd)
+    .sort((a, b) => a.dt - b.dt);
+
+  if (todayMatches.length === 0) return '';
+
+  const rows = todayMatches.map(m => `
+    <div class="cup-match compact">
+      <div class="cup-time">${formatMatchTime(m.dt)}</div>
+      <div class="cup-teams">
+        <span class="cup-team${isPlaceholderTeam(m.a) ? ' tbd' : ''}">${escapeHtml(m.a)}</span>
+        <span class="cup-vs">v</span>
+        <span class="cup-team${isPlaceholderTeam(m.b) ? ' tbd' : ''}">${escapeHtml(m.b)}</span>
+      </div>
+      <div class="cup-info">${escapeHtml(m.s)} · ${escapeHtml(m.v)}</div>
+    </div>
+  `).join('');
+
+  return `
+    <div class="card" style="margin-bottom: 32px;">
+      <div class="card-label">
+        <span><span class="accent"></span>World Cup · today</span>
+        <a href="#cup" style="text-decoration:none; color:var(--ink-mute); font-family:var(--font-mono); font-size:10px; letter-spacing:0.1em;">FULL SCHEDULE →</a>
+      </div>
+      <div class="cup-day-matches" style="margin-top: 8px;">${rows}</div>
+    </div>
+  `;
+}
 
 function route() {
   let hash = window.location.hash.slice(1) || 'today';
@@ -1736,6 +2150,7 @@ function renderCurrentView(hash) {
     case 'people': renderPeople(); break;
     case 'notes': renderKnowledge(); break;
     case 'vault': renderVault(); break;
+    case 'cup': renderCup(); break;
     case 'settings': renderSettings(); break;
   }
 }
@@ -1770,6 +2185,7 @@ function renderToday() {
   renderExpiryToday();
   renderTodayMetrics();
   renderHabits();
+  document.getElementById('today-cup').innerHTML = renderTodayCupWidget();
 }
 
 function renderThreeThings() {
