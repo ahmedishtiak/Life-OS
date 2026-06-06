@@ -2122,6 +2122,9 @@ function renderTodayCupWidget() {
   `;
 }
 
+// ── Routing ─────────────────────────────────────────────────────────
+const ROUTE_ALIASES = { knowledge: 'notes' }; // backward compat for renamed routes
+
 function route() {
   let hash = window.location.hash.slice(1) || 'today';
   if (ROUTE_ALIASES[hash]) {
