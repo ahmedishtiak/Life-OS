@@ -13,21 +13,24 @@
 
 <style>
 /* ── Design tokens ──────────────────────────────────────────────────── */
+/* Color palette tuned to WCAG 2.1 AAA contrast (7:1 for body text).
+   Calibrated against W3C SC 1.4.6, which targets vision equivalent to
+   approximately 20/80 visual acuity. UI borders meet SC 1.4.11 (≥3:1). */
 :root {
   --paper:        #F7F4EE;
-  --paper-2:      #EFEBE2;
-  --ink:          #0F1419;
-  --ink-soft:     #3A4148;
-  --ink-mute:     #7A7F85;
-  --rule:         #D4CFC2;
-  --rule-soft:    #E8E3D7;
-  --teal:         #2D5959;
-  --teal-soft:    #3A6B6B;
-  --terra:        #B85E3E;
-  --sage:         #6F8F6B;
-  --amber:        #B89858;
-  --rust:         #9C4423;
-  --gold:         #B8965A;
+  --paper-2:      #E8E1D2;
+  --ink:          #0F1419;  /* 16.86:1 — AAA */
+  --ink-soft:     #2A3038;  /* 12.12:1 — AAA */
+  --ink-mute:     #4B5159;  /*  7.30:1 — AAA (was 3.68:1, failed AA) */
+  --rule:         #928B7D;  /*  3.08:1 — UI 1.4.11 ✓ */
+  --rule-soft:    #C0BAAB;  /*  1.76:1 — subtle UI division */
+  --teal:         #1B4242;  /* 10.04:1 — AAA */
+  --teal-soft:    #2D5959;  /*  7.13:1 — AAA */
+  --terra:        #84371C;  /*  7.52:1 — AAA (was 4.06:1, failed AA) */
+  --sage:         #3A5337;  /*  7.74:1 — AAA (was 3.29:1, failed AA) */
+  --amber:        #665018;  /*  7.02:1 — AAA (was 2.49:1, failed AA) */
+  --rust:         #702A12;  /*  9.43:1 — AAA */
+  --gold:         #665018;
 
   --shadow-soft:  0 1px 2px rgba(15,20,25,.04), 0 2px 8px rgba(15,20,25,.04);
   --shadow-mid:   0 2px 6px rgba(15,20,25,.06), 0 8px 24px rgba(15,20,25,.08);
@@ -38,19 +41,20 @@
 }
 
 [data-theme="dark"] {
-  --paper:        #0F1825;
-  --paper-2:      #182236;
-  --ink:          #F0EBE0;
-  --ink-soft:     #C7BFB1;
-  --ink-mute:     #7E8590;
-  --rule:         #2B3548;
-  --rule-soft:    #1F2A3D;
-  --teal:         #7CB0AA;
-  --teal-soft:    #5A9690;
-  --terra:        #E08B6B;
-  --sage:         #A0C49C;
-  --amber:        #D9B97A;
-  --gold:         #D9B97A;
+  --paper:        #0A1018;
+  --paper-2:      #1A2536;
+  --ink:          #F5F1E8;  /* 16.93:1 — AAA */
+  --ink-soft:     #D4CCB9;  /* 11.94:1 — AAA */
+  --ink-mute:     #A8B0BA;  /*  8.71:1 — AAA (was 4.79:1) */
+  --rule:         #445268;  /*  2.41:1 — UI division */
+  --rule-soft:    #2B3648;
+  --teal:         #8FC5BE;  /*  9.91:1 — AAA */
+  --teal-soft:    #6FA89F;
+  --terra:        #F4A47E;  /*  9.51:1 — AAA */
+  --sage:         #B8DCB4;  /* 12.67:1 — AAA */
+  --amber:        #E8CC8E;  /* 12.23:1 — AAA */
+  --rust:         #F4A47E;
+  --gold:         #E8CC8E;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1115,6 +1119,279 @@ body::before {
   background: var(--paper);
 }
 
+/* ── Travel · Itinerary ───────────────────────────────────────────── */
+.trip-card.is-current { border-color: var(--teal); }
+.trip-card.is-past { opacity: 0.75; }
+
+.trip-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 2px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.trip-badge.current  { background: var(--teal); color: var(--paper); }
+.trip-badge.soon     { background: var(--terra); color: var(--paper); }
+.trip-badge.upcoming { background: var(--amber); color: var(--paper); }
+.trip-badge.later    { background: var(--paper); color: var(--ink-mute); border: 1px solid var(--rule); }
+.trip-badge.past     { background: var(--paper-2); color: var(--ink-mute); border: 1px solid var(--rule); }
+
+.trip-quick-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 12px 0 16px;
+  border-bottom: 1px solid var(--rule-soft);
+  margin-bottom: 16px;
+}
+.trip-quick-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-right: 6px;
+}
+.trip-quick-add button {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  padding: 6px 10px;
+  border-radius: 2px;
+  font-size: 12px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: all .15s ease;
+}
+.trip-quick-add button:hover {
+  border-color: var(--teal);
+  color: var(--teal);
+  background: var(--paper-2);
+}
+
+.trip-empty {
+  padding: 12px 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--ink-mute);
+  font-style: italic;
+}
+
+.trip-day { margin-bottom: 18px; }
+.trip-day:last-child { margin-bottom: 8px; }
+
+.trip-day-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 10px 0 8px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--rule-soft);
+}
+.trip-day-label {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 15px;
+  color: var(--ink);
+  font-variation-settings: 'opsz' 20;
+}
+.trip-day-num {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+
+.trip-segment {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  gap: 14px;
+  padding: 10px 12px 10px 0;
+  border-bottom: 1px dashed var(--rule-soft);
+  align-items: start;
+}
+.trip-segment:last-child { border-bottom: 0; }
+
+.seg-icon {
+  font-size: 18px;
+  line-height: 1.2;
+  width: 36px;
+  text-align: center;
+  color: var(--teal);
+  padding-top: 1px;
+}
+.seg-main { min-width: 0; }
+.seg-line-1 {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 2px;
+}
+.seg-type {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: var(--ink-mute);
+  font-weight: 500;
+}
+.seg-time {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.seg-enddate {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-mute);
+}
+.seg-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 15px;
+  color: var(--ink);
+  letter-spacing: -0.005em;
+  line-height: 1.3;
+  font-variation-settings: 'opsz' 18;
+}
+.seg-route {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-top: 1px;
+}
+.seg-arrow {
+  color: var(--ink-mute);
+  margin: 0 4px;
+}
+.seg-meta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--ink-mute);
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+.seg-notes {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin-top: 4px;
+  white-space: pre-wrap;
+}
+
+.trip-totals {
+  margin-top: 18px;
+  padding: 14px 0 4px;
+  border-top: 1px solid var(--rule-soft);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 14px;
+}
+.trip-totals-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.trip-totals-values {
+  display: flex;
+  gap: 16px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.trip-totals-values strong {
+  font-weight: 500;
+  color: var(--ink);
+  margin-right: 3px;
+}
+
+/* Travel docs panel (linked-from-elsewhere) */
+.travel-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+.link-panel {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 16px 18px;
+}
+.link-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--rule-soft);
+}
+.link-panel-head h4 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 15px;
+  color: var(--ink);
+  font-variation-settings: 'opsz' 18;
+}
+.link-panel-head a {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--ink-mute);
+  text-decoration: none;
+}
+.link-panel-head a:hover { color: var(--teal); }
+.link-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.link-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--rule-soft);
+}
+.link-list li:last-child { border-bottom: 0; }
+.link-list a {
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 500;
+}
+.link-list a:hover { color: var(--teal); }
+.link-cat {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.link-meta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--ink-mute);
+  white-space: nowrap;
+}
+.link-meta.warn { color: var(--terra); }
+.link-meta.crit { background: var(--rust); color: var(--paper); padding: 1px 5px; border-radius: 2px; }
+
 /* ── Cup (World Cup 2026 schedule) ────────────────────────────────── */
 .cup-day-card {
   background: var(--paper);
@@ -1327,6 +1604,7 @@ footer a:hover { color: var(--ink); border-color: var(--ink); }
     <a href="#people" data-route="people">People</a>
     <a href="#notes" data-route="notes">Notes</a>
     <a href="#vault" data-route="vault">Vault</a>
+    <a href="#travel" data-route="travel">Travel</a>
     <a href="#cup" data-route="cup">Cup</a>
     <a href="#settings" data-route="settings">Settings</a>
   </nav>
@@ -1626,6 +1904,28 @@ footer a:hover { color: var(--ink); border-color: var(--ink); }
     </div>
   </section>
 
+  <!-- ── TRAVEL · Itinerary ──────────────────────────────────── -->
+  <section class="page" id="page-travel">
+    <div class="section-head">
+      <h2>Travel · Itinerary</h2>
+      <span class="meta">Every trip in one place</span>
+    </div>
+    <div class="toolbar">
+      <button class="btn primary" onclick="openModal('trip')">+ New trip</button>
+      <button class="btn" onclick="openModal('tripseg')">+ Add segment</button>
+      <select id="travel-filter" onchange="renderTravel()">
+        <option value="upcoming">Upcoming &amp; current</option>
+        <option value="all">All trips</option>
+        <option value="past">Past trips</option>
+      </select>
+      <div class="right">
+        <span class="meta" id="travel-count">—</span>
+      </div>
+    </div>
+    <div id="travel-list" style="display: flex; flex-direction: column; gap: 16px;"></div>
+    <div id="travel-docs" style="margin-top: 32px;"></div>
+  </section>
+
   <!-- ── CUP (World Cup 2026 schedule) ───────────────────────── -->
   <section class="page" id="page-cup">
     <div class="section-head">
@@ -1746,6 +2046,8 @@ const DEFAULT_DATA = {
   people: [],
   knowledge: [],
   vault: [],
+  trips: [],
+  tripSegments: [],
   settings: { theme: 'light' }
 };
 
@@ -1776,6 +2078,13 @@ function saveData() {
 
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+// Combine a YYYY-MM-DD date and optional HH:MM time into ISO string, or null
+function combineDateTime(dateStr, timeStr) {
+  if (!dateStr) return null;
+  if (!timeStr) return dateStr + 'T00:00';
+  return dateStr + 'T' + timeStr;
 }
 
 function toast(msg) {
@@ -1977,6 +2286,347 @@ const MATCHES = [
 
 
 
+// ── TRAVEL · Itinerary ──────────────────────────────────────────────
+const SEG_ICONS = {
+  flight:   '✈',
+  train:    '🚆',
+  bus:      '🚌',
+  taxi:     '🚗',
+  hotel:    '🏨',
+  airbnb:   '🛏',
+  activity: '◆',
+  meal:     '🍽',
+  other:    '•'
+};
+
+function formatTripDateRange(start, end) {
+  if (!start && !end) return 'Dates TBD';
+  const s = start ? new Date(start) : null;
+  const e = end ? new Date(end) : null;
+  const fmt = (d, opts) => d.toLocaleDateString('en-GB', opts);
+  if (s && e) {
+    const sameYear = s.getFullYear() === e.getFullYear();
+    const sameMonth = sameYear && s.getMonth() === e.getMonth();
+    if (sameMonth) {
+      return `${s.getDate()}–${e.getDate()} ${fmt(e, { month: 'short', year: 'numeric' })}`;
+    }
+    if (sameYear) {
+      return `${fmt(s, { day: 'numeric', month: 'short' })} – ${fmt(e, { day: 'numeric', month: 'short', year: 'numeric' })}`;
+    }
+    return `${fmt(s, { day: 'numeric', month: 'short', year: 'numeric' })} – ${fmt(e, { day: 'numeric', month: 'short', year: 'numeric' })}`;
+  }
+  return fmt(s || e, { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function renderTravel() {
+  const wrap = document.getElementById('travel-list');
+  const filter = document.getElementById('travel-filter').value;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+
+  let trips = (data.trips || []).slice();
+
+  // Categorise each trip as future / current / past
+  trips.forEach(t => {
+    const s = t.startDate ? new Date(t.startDate) : null;
+    const e = t.endDate ? new Date(t.endDate) : (s ? new Date(s) : null);
+    if (e) e.setHours(23, 59, 59, 999);
+    if (s && s > today) t._state = 'future';
+    else if (e && e < today) t._state = 'past';
+    else if (s) t._state = 'current';
+    else t._state = 'future';
+  });
+
+  if (filter === 'upcoming') trips = trips.filter(t => t._state !== 'past');
+  else if (filter === 'past') trips = trips.filter(t => t._state === 'past');
+
+  trips.sort((a, b) => {
+    if (a._state === 'past' && b._state !== 'past') return 1;
+    if (a._state !== 'past' && b._state === 'past') return -1;
+    const aS = a.startDate || '9999';
+    const bS = b.startDate || '9999';
+    return a._state === 'past' ? bS.localeCompare(aS) : aS.localeCompare(bS);
+  });
+
+  document.getElementById('travel-count').textContent =
+    `${trips.length} of ${(data.trips || []).length} trips`;
+
+  if (trips.length === 0) {
+    wrap.innerHTML = `
+      <div class="empty">
+        <h4>No trips yet</h4>
+        <p>Create a trip, then add flights, hotels, trains, and activities under it. All your travel details in one chronological view.</p>
+      </div>`;
+  } else {
+    wrap.innerHTML = trips.map(t => renderTripCard(t, today)).join('');
+  }
+
+  renderTravelDocsPanel();
+}
+
+function renderTripCard(trip, today) {
+  const segments = (data.tripSegments || [])
+    .filter(s => s.tripId === trip.id)
+    .sort((a, b) => (a.startISO || '').localeCompare(b.startISO || ''));
+
+  // Group segments by date (YYYY-MM-DD)
+  const byDay = {};
+  segments.forEach(s => {
+    const key = s.startISO ? s.startISO.slice(0, 10) : 'unscheduled';
+    if (!byDay[key]) byDay[key] = [];
+    byDay[key].push(s);
+  });
+
+  // Totals per currency
+  const totals = {};
+  segments.forEach(s => {
+    if (s.cost != null && !isNaN(s.cost)) {
+      const cur = s.currency || trip.currency || 'EUR';
+      totals[cur] = (totals[cur] || 0) + parseFloat(s.cost);
+    }
+  });
+
+  const startD = trip.startDate ? new Date(trip.startDate) : null;
+  const daysLabel = (() => {
+    if (trip._state === 'past') return '<span class="trip-badge past">Past</span>';
+    if (trip._state === 'current') return '<span class="trip-badge current">In progress</span>';
+    if (startD) {
+      const days = Math.ceil((startD - today) / 86400000);
+      if (days <= 0) return '<span class="trip-badge current">Today</span>';
+      if (days <= 7) return `<span class="trip-badge soon">${days} day${days === 1 ? '' : 's'}</span>`;
+      if (days <= 30) return `<span class="trip-badge upcoming">${days} days</span>`;
+      return `<span class="trip-badge later">${days} days</span>`;
+    }
+    return '';
+  })();
+
+  const segCountLabel = segments.length === 0
+    ? '<span class="trip-empty-note">No segments yet — use the quick-add buttons</span>'
+    : `<span class="trip-seg-count">${segments.length} segment${segments.length === 1 ? '' : 's'}</span>`;
+
+  const dayKeys = Object.keys(byDay).sort();
+  const segmentsHtml = dayKeys.length === 0 ? '' : dayKeys.map(key => renderTripDay(key, byDay[key], trip)).join('');
+
+  const totalsHtml = Object.keys(totals).length === 0 ? '' : `
+    <div class="trip-totals">
+      <div class="trip-totals-label">Estimated total</div>
+      <div class="trip-totals-values">
+        ${Object.entries(totals).map(([cur, amt]) => `<span><strong>${formatMoney(amt)}</strong> ${cur}</span>`).join('')}
+      </div>
+    </div>
+  `;
+
+  return `
+    <details class="note-card trip-card${trip._state === 'past' ? ' is-past' : ''}${trip._state === 'current' ? ' is-current' : ''}" ${trip._state !== 'past' ? 'open' : ''}>
+      <summary class="note-summary">
+        <div class="note-meta">
+          <span>${escapeHtml(trip.destination || '—')}</span>
+          <span class="meta-right-stack">
+            ${daysLabel}
+            <span class="meta-date-actual">${formatTripDateRange(trip.startDate, trip.endDate)}</span>
+          </span>
+        </div>
+        <h3 class="note-title with-action">
+          <span class="note-chevron">›</span>
+          <span>${escapeHtml(trip.name)}</span>
+          <button class="summary-edit" onclick="event.stopPropagation(); event.preventDefault(); editTrip('${trip.id}');" title="Edit" aria-label="Edit">✎</button>
+        </h3>
+      </summary>
+      <div class="note-body">
+        <div class="trip-quick-add">
+          <span class="trip-quick-label">Add:</span>
+          <button onclick="addSegment('${trip.id}', 'flight')">✈ Flight</button>
+          <button onclick="addSegment('${trip.id}', 'train')">🚆 Train</button>
+          <button onclick="addSegment('${trip.id}', 'bus')">🚌 Bus</button>
+          <button onclick="addSegment('${trip.id}', 'taxi')">🚗 Taxi</button>
+          <button onclick="addSegment('${trip.id}', 'hotel')">🏨 Hotel</button>
+          <button onclick="addSegment('${trip.id}', 'activity')">◆ Activity</button>
+          <button onclick="addSegment('${trip.id}', 'other')">• Other</button>
+        </div>
+        ${segments.length === 0 ? `<div class="trip-empty">${segCountLabel}</div>` : ''}
+        ${segmentsHtml}
+        ${totalsHtml}
+        ${trip.notes ? `<div class="note-content" style="margin-top: 16px;">${renderNoteContent(trip.notes)}</div>` : ''}
+        <div class="note-actions">
+          <button class="btn" onclick="editTrip('${trip.id}')">Edit trip</button>
+        </div>
+      </div>
+    </details>
+  `;
+}
+
+function renderTripDay(dateKey, segs, trip) {
+  let header;
+  if (dateKey === 'unscheduled') {
+    header = '<span class="trip-day-label">Unscheduled</span>';
+  } else {
+    const d = new Date(dateKey + 'T00:00:00');
+    const tripStart = trip.startDate ? new Date(trip.startDate) : null;
+    let dayNum = '';
+    if (tripStart) {
+      const idx = Math.floor((d - tripStart) / 86400000) + 1;
+      if (idx > 0) dayNum = `<span class="trip-day-num">Day ${idx}</span>`;
+    }
+    const dayLabel = d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    header = `<span class="trip-day-label">${dayLabel}</span>${dayNum}`;
+  }
+
+  const rows = segs.map(s => renderSegmentRow(s)).join('');
+  return `<div class="trip-day"><div class="trip-day-head">${header}</div>${rows}</div>`;
+}
+
+function renderSegmentRow(s) {
+  const icon = SEG_ICONS[s.type] || '•';
+  const typeLabel = (s.type || 'other').toUpperCase();
+  const startT = s.startISO && s.startISO.length >= 16 ? s.startISO.slice(11, 16) : '';
+  const endT = s.endISO && s.endISO.length >= 16 ? s.endISO.slice(11, 16) : '';
+
+  // Route or location line
+  let route = '';
+  if (s.fromLoc && s.toLoc) route = `${escapeHtml(s.fromLoc)} <span class="seg-arrow">→</span> ${escapeHtml(s.toLoc)}`;
+  else if (s.fromLoc) route = escapeHtml(s.fromLoc);
+  else if (s.toLoc) route = escapeHtml(s.toLoc);
+
+  // Time display
+  let timeStr = '';
+  if (startT && endT) timeStr = `${startT} → ${endT}`;
+  else if (startT) timeStr = startT;
+
+  // End date if different (for multi-day hotels etc.)
+  let endDateNote = '';
+  if (s.endISO && s.startISO && s.endISO.slice(0, 10) !== s.startISO.slice(0, 10)) {
+    const ed = new Date(s.endISO.slice(0, 10) + 'T00:00:00');
+    endDateNote = ` · until ${ed.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}${endT ? ' ' + endT : ''}`;
+  }
+
+  // Cost
+  let costStr = '';
+  if (s.cost != null && !isNaN(s.cost)) {
+    costStr = `${formatMoney(s.cost)} ${escapeHtml(s.currency || 'EUR')}`;
+  }
+
+  // Build meta line
+  const metaBits = [];
+  if (s.vendor) metaBits.push(escapeHtml(s.vendor));
+  if (s.confirmation) metaBits.push(`Ref: ${escapeHtml(s.confirmation)}`);
+  if (costStr) metaBits.push(costStr);
+  const metaLine = metaBits.join(' · ');
+
+  return `
+    <div class="trip-segment seg-${s.type || 'other'}">
+      <div class="seg-icon" aria-label="${typeLabel}">${icon}</div>
+      <div class="seg-main">
+        <div class="seg-line-1">
+          <span class="seg-type">${typeLabel}</span>
+          ${timeStr ? `<span class="seg-time">${timeStr}</span>` : ''}
+          ${endDateNote ? `<span class="seg-enddate">${endDateNote}</span>` : ''}
+        </div>
+        ${s.title ? `<div class="seg-title">${escapeHtml(s.title)}</div>` : ''}
+        ${route ? `<div class="seg-route">${route}</div>` : ''}
+        ${metaLine ? `<div class="seg-meta">${metaLine}</div>` : ''}
+        ${s.notes ? `<div class="seg-notes">${escapeHtml(s.notes)}</div>` : ''}
+      </div>
+      <button class="summary-edit" onclick="editTripseg('${s.id}')" title="Edit" aria-label="Edit">✎</button>
+    </div>
+  `;
+}
+
+function formatMoney(n) {
+  return parseFloat(n).toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+
+// Pulls travel-relevant items from elsewhere in the app for one consolidated view
+function renderTravelDocsPanel() {
+  const wrap = document.getElementById('travel-docs');
+  if (!wrap) return;
+
+  // Vault: documents in categories that travel uses
+  const travelCats = ['Identity', 'Insurance', 'Medical'];
+  const vaultDocs = (data.vault || []).filter(v => travelCats.includes(v.category));
+
+  // Deadlines: items whose name suggests travel relevance, or whose category is Identity / Travel
+  const travelKw = /passport|visa|residence|permit|kela|insurance|travel|driving|driver|vaccination|vaccine/i;
+  const travelDeadlines = (data.deadlines || []).filter(d =>
+    travelKw.test(d.item || '') || travelKw.test(d.category || '')
+  );
+
+  // Notes: anything tagged 'travel'
+  const travelNotes = (data.knowledge || []).filter(n =>
+    (n.tags || []).some(t => /travel|trip|itinerary/i.test(t))
+  );
+
+  if (vaultDocs.length === 0 && travelDeadlines.length === 0 && travelNotes.length === 0) {
+    wrap.innerHTML = `
+      <div class="welcome">
+        <h3>Linked from elsewhere</h3>
+        <p>Travel documents (passport, visas, insurance) you add in the <a href="#vault">Vault</a>, travel-related deadlines from <a href="#deadlines">Deadlines</a>, and notes tagged <em>travel</em> will appear here for one-stop access.</p>
+      </div>`;
+    return;
+  }
+
+  const vaultHtml = vaultDocs.length === 0 ? '' : `
+    <div class="link-panel">
+      <div class="link-panel-head">
+        <h4>Travel documents</h4>
+        <a href="#vault">All vault →</a>
+      </div>
+      <ul class="link-list">
+        ${vaultDocs.map(v => {
+          const days = v.expiry ? daysBetween(v.expiry) : null;
+          let exp = '';
+          if (days != null) {
+            if (days < 0) exp = `<span class="link-meta crit">EXPIRED ${-days}d</span>`;
+            else if (days < 90) exp = `<span class="link-meta warn">${days}d</span>`;
+            else exp = `<span class="link-meta">${days}d</span>`;
+          }
+          return `<li><a href="#vault">${escapeHtml(v.name)}</a><span class="link-cat">${escapeHtml(v.category || '')}</span>${exp}</li>`;
+        }).join('')}
+      </ul>
+    </div>`;
+
+  const dlHtml = travelDeadlines.length === 0 ? '' : `
+    <div class="link-panel">
+      <div class="link-panel-head">
+        <h4>Travel deadlines</h4>
+        <a href="#deadlines">All deadlines →</a>
+      </div>
+      <ul class="link-list">
+        ${travelDeadlines.map(d => {
+          const days = d.expiry ? daysBetween(d.expiry) : null;
+          let exp = '';
+          if (days != null) {
+            if (days < 0) exp = `<span class="link-meta crit">EXPIRED ${-days}d</span>`;
+            else if (days < 90) exp = `<span class="link-meta warn">${days}d</span>`;
+            else exp = `<span class="link-meta">${days}d</span>`;
+          }
+          return `<li><a href="#deadlines">${escapeHtml(d.item)}</a><span class="link-cat">${escapeHtml(d.category || '')}</span>${exp}</li>`;
+        }).join('')}
+      </ul>
+    </div>`;
+
+  const notesHtml = travelNotes.length === 0 ? '' : `
+    <div class="link-panel">
+      <div class="link-panel-head">
+        <h4>Travel notes</h4>
+        <a href="#notes">All notes →</a>
+      </div>
+      <ul class="link-list">
+        ${travelNotes.map(n => `<li><a href="#notes">${escapeHtml(n.title)}</a><span class="link-cat">${escapeHtml((n.tags || []).join(', '))}</span></li>`).join('')}
+      </ul>
+    </div>`;
+
+  wrap.innerHTML = `
+    <div class="section-head" style="margin-top: 8px;">
+      <h2 style="font-size: 22px;">Linked from elsewhere</h2>
+      <span class="meta">Auto-pulled from Vault, Deadlines, and Notes</span>
+    </div>
+    <div class="travel-links">
+      ${vaultHtml}
+      ${dlHtml}
+      ${notesHtml}
+    </div>
+  `;
+}
+
 // ── CUP (World Cup 2026) ────────────────────────────────────────────
 function parseMatchDate(d) {
   // d is like "2026-06-11T21" or "2026-06-11T21:00" or "2026-06-11T21:30"
@@ -2153,6 +2803,7 @@ function renderCurrentView(hash) {
     case 'people': renderPeople(); break;
     case 'notes': renderKnowledge(); break;
     case 'vault': renderVault(); break;
+    case 'travel': renderTravel(); break;
     case 'cup': renderCup(); break;
     case 'settings': renderSettings(); break;
   }
@@ -3143,6 +3794,8 @@ function renderVault() {
 }
 
 function editVault(id) { openModal('vault', id); }
+function editTrip(id) { openModal('trip', id); }
+function editTripseg(id) { openModal('tripseg', id); }
 
 // ── SETTINGS ────────────────────────────────────────────────────────
 function renderSettings() {
@@ -3369,12 +4022,18 @@ function loadSampleData() {
 }
 
 // ── MODAL ───────────────────────────────────────────────────────────
+// Stash for quick-add segment context (which trip + segment type)
+let _segDefault = {};
+function addSegment(tripId, type) {
+  _segDefault = { tripId, type };
+  openModal('tripseg');
+}
+
 function openModal(type, id) {
   const overlay = document.getElementById('modal-overlay');
   const content = document.getElementById('modal-content');
   let html = '';
   const item = id ? findItem(type, id) : {};
-
   const forms = {
     task: () => `
       <h3>${id ? 'Edit' : 'New'} Task</h3>
@@ -3516,7 +4175,64 @@ function openModal(type, id) {
       </div>
       <div class="form-row"><label>Location</label><input type="text" id="f-location" value="${escapeAttr(item.location || '')}" placeholder="e.g. Proton Drive / 01-Identity"></div>
       <div class="form-row"><label>Notes</label><textarea id="f-notes">${escapeAttr(item.notes || '')}</textarea></div>
-    `
+    `,
+    trip: () => `
+      <h3>${id ? 'Edit' : 'New'} Trip</h3>
+      <div class="form-row"><label>Trip name</label><input type="text" id="f-name" value="${escapeAttr(item.name || '')}" placeholder="e.g. Bangkok December 2026" autofocus></div>
+      <div class="form-row"><label>Destination</label><input type="text" id="f-destination" value="${escapeAttr(item.destination || '')}" placeholder="e.g. Thailand · Bangkok &amp; Chiang Mai"></div>
+      <div class="form-row-grid">
+        <div class="form-row"><label>Start date</label><input type="date" id="f-startdate" value="${item.startDate || ''}"></div>
+        <div class="form-row"><label>End date</label><input type="date" id="f-enddate" value="${item.endDate || ''}"></div>
+      </div>
+      <div class="form-row"><label>Default currency</label><input type="text" id="f-currency" value="${escapeAttr(item.currency || 'EUR')}" maxlength="3" style="text-transform:uppercase" placeholder="EUR"></div>
+      <div class="form-row"><label>Notes</label><textarea id="f-notes" placeholder="Trip purpose, who's going, packing reminders…">${escapeAttr(item.notes || '')}</textarea></div>
+    `,
+    tripseg: () => {
+      const trips = (data.trips || []).slice().sort((a, b) => (a.startDate || '').localeCompare(b.startDate || ''));
+      const defaultTripId = item.tripId || _segDefault.tripId || (trips[trips.length - 1] && trips[trips.length - 1].id) || '';
+      const defaultType = item.type || _segDefault.type || 'flight';
+      const defaultCur = item.currency || (data.trips.find(t => t.id === defaultTripId) || {}).currency || 'EUR';
+      const dStart = item.startISO ? item.startISO.slice(0, 10) : '';
+      const tStart = item.startISO && item.startISO.length >= 16 ? item.startISO.slice(11, 16) : '';
+      const dEnd = item.endISO ? item.endISO.slice(0, 10) : '';
+      const tEnd = item.endISO && item.endISO.length >= 16 ? item.endISO.slice(11, 16) : '';
+      const segTypes = ['flight', 'train', 'bus', 'taxi', 'hotel', 'airbnb', 'activity', 'meal', 'other'];
+      return `
+        <h3>${id ? 'Edit' : 'New'} Travel Segment</h3>
+        <div class="form-row"><label>Trip</label>
+          <select id="f-tripid">
+            ${trips.map(t => `<option value="${t.id}" ${t.id === defaultTripId ? 'selected' : ''}>${escapeHtml(t.name)}</option>`).join('') || '<option value="">— no trips yet —</option>'}
+          </select>
+        </div>
+        <div class="form-row-grid">
+          <div class="form-row"><label>Type</label>
+            <select id="f-segtype">
+              ${segTypes.map(t => `<option ${defaultType === t ? 'selected' : ''}>${t}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-row"><label>Vendor / Operator</label><input type="text" id="f-vendor" value="${escapeAttr(item.vendor || '')}" placeholder="Finnair · Sukhumvit Hotel · SJ"></div>
+        </div>
+        <div class="form-row"><label>Title / Reference</label><input type="text" id="f-title" value="${escapeAttr(item.title || '')}" placeholder="AY091 · Standard room · Direct bus 405"></div>
+        <div class="form-row-grid">
+          <div class="form-row"><label>From / At</label><input type="text" id="f-from" value="${escapeAttr(item.fromLoc || '')}" placeholder="HEL · Sukhumvit Rd · Helsinki Central"></div>
+          <div class="form-row"><label>To</label><input type="text" id="f-to" value="${escapeAttr(item.toLoc || '')}" placeholder="BKK · — · Tampere"></div>
+        </div>
+        <div class="form-row-grid">
+          <div class="form-row"><label>Start date</label><input type="date" id="f-startdate" value="${dStart}"></div>
+          <div class="form-row"><label>Start time</label><input type="time" id="f-starttime" value="${tStart}"></div>
+        </div>
+        <div class="form-row-grid">
+          <div class="form-row"><label>End date</label><input type="date" id="f-enddate" value="${dEnd}"></div>
+          <div class="form-row"><label>End time</label><input type="time" id="f-endtime" value="${tEnd}"></div>
+        </div>
+        <div class="form-row-grid">
+          <div class="form-row"><label>Confirmation #</label><input type="text" id="f-confirmation" value="${escapeAttr(item.confirmation || '')}" placeholder="PNR / booking ref"></div>
+          <div class="form-row"><label>Cost</label><input type="number" step="0.01" id="f-cost" value="${item.cost != null ? item.cost : ''}"></div>
+        </div>
+        <div class="form-row"><label>Currency</label><input type="text" id="f-currency" value="${escapeAttr(defaultCur)}" maxlength="3" style="text-transform:uppercase"></div>
+        <div class="form-row"><label>Notes</label><textarea id="f-notes" placeholder="Seat, meal, baggage allowance, breakfast included, etc.">${escapeAttr(item.notes || '')}</textarea></div>
+      `;
+    }
   };
 
   html = forms[type]();
@@ -3528,6 +4244,8 @@ function openModal(type, id) {
 
   content.innerHTML = html;
   overlay.classList.add('open');
+  // Clear quick-add segment defaults after use
+  if (type === 'tripseg') _segDefault = {};
   setTimeout(() => {
     const first = content.querySelector('input,textarea,select');
     if (first) first.focus();
@@ -3541,7 +4259,8 @@ function closeModal() {
 function findItem(type, id) {
   const map = {
     task: 'tasks', deadline: 'deadlines', money: 'money', learn: 'learning',
-    app: 'applications', person: 'people', note: 'knowledge', vault: 'vault'
+    app: 'applications', person: 'people', note: 'knowledge', vault: 'vault',
+    trip: 'trips', tripseg: 'tripSegments'
   };
   const arr = data[map[type]];
   return arr.find(x => x.id === id) || {};
@@ -3550,7 +4269,8 @@ function findItem(type, id) {
 function saveItem(type, id) {
   const map = {
     task: 'tasks', deadline: 'deadlines', money: 'money', learn: 'learning',
-    app: 'applications', person: 'people', note: 'knowledge', vault: 'vault'
+    app: 'applications', person: 'people', note: 'knowledge', vault: 'vault',
+    trip: 'trips', tripseg: 'tripSegments'
   };
   const arr = data[map[type]];
 
@@ -3626,6 +4346,30 @@ function saveItem(type, id) {
     item.expiry = get('f-expiry') || null;
     item.notes = get('f-notes');
     if (!item.name) { toast('Name required'); return; }
+  } else if (type === 'trip') {
+    item.name = get('f-name').trim();
+    item.destination = get('f-destination').trim();
+    item.startDate = get('f-startdate') || null;
+    item.endDate = get('f-enddate') || null;
+    item.currency = (get('f-currency') || 'EUR').trim().toUpperCase();
+    item.notes = get('f-notes');
+    if (!item.name) { toast('Trip name required'); return; }
+  } else if (type === 'tripseg') {
+    item.tripId = get('f-tripid');
+    item.type = get('f-segtype');
+    item.title = get('f-title').trim();
+    item.fromLoc = get('f-from').trim();
+    item.toLoc = get('f-to').trim();
+    item.startISO = combineDateTime(get('f-startdate'), get('f-starttime'));
+    item.endISO = combineDateTime(get('f-enddate'), get('f-endtime'));
+    item.vendor = get('f-vendor').trim();
+    item.confirmation = get('f-confirmation').trim();
+    const c = get('f-cost');
+    item.cost = c ? parseFloat(c) : null;
+    item.currency = (get('f-currency') || 'EUR').trim().toUpperCase();
+    item.notes = get('f-notes');
+    if (!item.tripId) { toast('Trip required'); return; }
+    if (!item.title && !item.fromLoc && !item.toLoc) { toast('Title or route required'); return; }
   }
 
   if (!id) arr.push(item);
@@ -3639,9 +4383,14 @@ function deleteItem(type, id) {
   if (!confirm('Delete this item? Cannot be undone.')) return;
   const map = {
     task: 'tasks', deadline: 'deadlines', money: 'money', learn: 'learning',
-    app: 'applications', person: 'people', note: 'knowledge', vault: 'vault'
+    app: 'applications', person: 'people', note: 'knowledge', vault: 'vault',
+    trip: 'trips', tripseg: 'tripSegments'
   };
   data[map[type]] = data[map[type]].filter(x => x.id !== id);
+  // Cascade: deleting a trip also removes its segments
+  if (type === 'trip') {
+    data.tripSegments = (data.tripSegments || []).filter(s => s.tripId !== id);
+  }
   saveData();
   closeModal();
   toast('Deleted');
