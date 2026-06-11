@@ -1317,81 +1317,6 @@ body::before {
   margin-right: 3px;
 }
 
-/* Travel docs panel (linked-from-elsewhere) */
-.travel-links {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
-  margin-top: 12px;
-}
-.link-panel {
-  background: var(--paper);
-  border: 1px solid var(--rule);
-  border-radius: 3px;
-  padding: 16px 18px;
-}
-.link-panel-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--rule-soft);
-}
-.link-panel-head h4 {
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: 15px;
-  color: var(--ink);
-  font-variation-settings: 'opsz' 18;
-}
-.link-panel-head a {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  color: var(--ink-mute);
-  text-decoration: none;
-}
-.link-panel-head a:hover { color: var(--teal); }
-.link-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.link-list li {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  padding: 6px 0;
-  border-bottom: 1px dashed var(--rule-soft);
-}
-.link-list li:last-child { border-bottom: 0; }
-.link-list a {
-  flex: 1;
-  font-family: var(--font-body);
-  font-size: 13px;
-  color: var(--ink);
-  text-decoration: none;
-  font-weight: 500;
-}
-.link-list a:hover { color: var(--teal); }
-.link-cat {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink-mute);
-}
-.link-meta {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--ink-mute);
-  white-space: nowrap;
-}
-.link-meta.warn { color: var(--terra); }
-.link-meta.crit { background: var(--rust); color: var(--paper); padding: 1px 5px; border-radius: 2px; }
-
 /* ── Cup (World Cup 2026 schedule) ────────────────────────────────── */
 .cup-day-card {
   background: var(--paper);
@@ -1923,7 +1848,6 @@ footer a:hover { color: var(--ink); border-color: var(--ink); }
       </div>
     </div>
     <div id="travel-list" style="display: flex; flex-direction: column; gap: 16px;"></div>
-    <div id="travel-docs" style="margin-top: 32px;"></div>
   </section>
 
   <!-- ── CUP (World Cup 2026 schedule) ───────────────────────── -->
@@ -2359,8 +2283,6 @@ function renderTravel() {
   } else {
     wrap.innerHTML = trips.map(t => renderTripCard(t, today)).join('');
   }
-
-  renderTravelDocsPanel();
 }
 
 function renderTripCard(trip, today) {
@@ -2532,99 +2454,6 @@ function renderSegmentRow(s) {
 
 function formatMoney(n) {
   return parseFloat(n).toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-}
-
-// Pulls travel-relevant items from elsewhere in the app for one consolidated view
-function renderTravelDocsPanel() {
-  const wrap = document.getElementById('travel-docs');
-  if (!wrap) return;
-
-  // Vault: documents in categories that travel uses
-  const travelCats = ['Identity', 'Insurance', 'Medical'];
-  const vaultDocs = (data.vault || []).filter(v => travelCats.includes(v.category));
-
-  // Deadlines: items whose name suggests travel relevance, or whose category is Identity / Travel
-  const travelKw = /passport|visa|residence|permit|kela|insurance|travel|driving|driver|vaccination|vaccine/i;
-  const travelDeadlines = (data.deadlines || []).filter(d =>
-    travelKw.test(d.item || '') || travelKw.test(d.category || '')
-  );
-
-  // Notes: anything tagged 'travel'
-  const travelNotes = (data.knowledge || []).filter(n =>
-    (n.tags || []).some(t => /travel|trip|itinerary/i.test(t))
-  );
-
-  if (vaultDocs.length === 0 && travelDeadlines.length === 0 && travelNotes.length === 0) {
-    wrap.innerHTML = `
-      <div class="welcome">
-        <h3>Linked from elsewhere</h3>
-        <p>Travel documents (passport, visas, insurance) you add in the <a href="#vault">Vault</a>, travel-related deadlines from <a href="#deadlines">Deadlines</a>, and notes tagged <em>travel</em> will appear here for one-stop access.</p>
-      </div>`;
-    return;
-  }
-
-  const vaultHtml = vaultDocs.length === 0 ? '' : `
-    <div class="link-panel">
-      <div class="link-panel-head">
-        <h4>Travel documents</h4>
-        <a href="#vault">All vault →</a>
-      </div>
-      <ul class="link-list">
-        ${vaultDocs.map(v => {
-          const days = v.expiry ? daysBetween(v.expiry) : null;
-          let exp = '';
-          if (days != null) {
-            if (days < 0) exp = `<span class="link-meta crit">EXPIRED ${-days}d</span>`;
-            else if (days < 90) exp = `<span class="link-meta warn">${days}d</span>`;
-            else exp = `<span class="link-meta">${days}d</span>`;
-          }
-          return `<li><a href="#vault">${escapeHtml(v.name)}</a><span class="link-cat">${escapeHtml(v.category || '')}</span>${exp}</li>`;
-        }).join('')}
-      </ul>
-    </div>`;
-
-  const dlHtml = travelDeadlines.length === 0 ? '' : `
-    <div class="link-panel">
-      <div class="link-panel-head">
-        <h4>Travel deadlines</h4>
-        <a href="#deadlines">All deadlines →</a>
-      </div>
-      <ul class="link-list">
-        ${travelDeadlines.map(d => {
-          const days = d.expiry ? daysBetween(d.expiry) : null;
-          let exp = '';
-          if (days != null) {
-            if (days < 0) exp = `<span class="link-meta crit">EXPIRED ${-days}d</span>`;
-            else if (days < 90) exp = `<span class="link-meta warn">${days}d</span>`;
-            else exp = `<span class="link-meta">${days}d</span>`;
-          }
-          return `<li><a href="#deadlines">${escapeHtml(d.item)}</a><span class="link-cat">${escapeHtml(d.category || '')}</span>${exp}</li>`;
-        }).join('')}
-      </ul>
-    </div>`;
-
-  const notesHtml = travelNotes.length === 0 ? '' : `
-    <div class="link-panel">
-      <div class="link-panel-head">
-        <h4>Travel notes</h4>
-        <a href="#notes">All notes →</a>
-      </div>
-      <ul class="link-list">
-        ${travelNotes.map(n => `<li><a href="#notes">${escapeHtml(n.title)}</a><span class="link-cat">${escapeHtml((n.tags || []).join(', '))}</span></li>`).join('')}
-      </ul>
-    </div>`;
-
-  wrap.innerHTML = `
-    <div class="section-head" style="margin-top: 8px;">
-      <h2 style="font-size: 22px;">Linked from elsewhere</h2>
-      <span class="meta">Auto-pulled from Vault, Deadlines, and Notes</span>
-    </div>
-    <div class="travel-links">
-      ${vaultHtml}
-      ${dlHtml}
-      ${notesHtml}
-    </div>
-  `;
 }
 
 // ── CUP (World Cup 2026) ────────────────────────────────────────────
