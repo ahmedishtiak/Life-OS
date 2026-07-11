@@ -1119,6 +1119,25 @@ body::before {
   background: var(--paper);
 }
 
+/* ── Today · Weekday schedule widget ─────────────────────────────── */
+.schedule-today-card {
+  border-left: 3px solid var(--teal);
+}
+.schedule-today-day {
+  color: var(--ink-mute);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+}
+.schedule-today-content {
+  margin-top: 14px;
+  font-size: 15px;
+  color: var(--ink);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  font-family: var(--font-body);
+}
+
 /* ── Travel · Itinerary ───────────────────────────────────────────── */
 .trip-card.is-current { border-color: var(--teal); }
 .trip-card.is-past { opacity: 0.75; }
@@ -1420,6 +1439,7 @@ footer a:hover { color: var(--ink); border-color: var(--ink); }
     </div>
 
     <div id="welcome-panel"></div>
+    <div id="today-schedules"></div>
 
     <div class="grid grid-asym" style="margin-bottom: 32px;">
       <div class="card">
@@ -1976,6 +1996,82 @@ function renderCurrentView(hash) {
 }
 
 // ── TODAY ───────────────────────────────────────────────────────────
+
+// Parses any vault entry whose notes are structured by weekday.
+// Recognises headers like "Monday", "Monday – Maanantai", "Monday: ...".
+// Returns a map: { monday: '...items...', tuesday: '...items...', ... }
+function parseWeekdaySections(notes) {
+  if (!notes) return {};
+  const daysEn = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const daysFi = ['Maanantai', 'Tiistai', 'Keskiviikko', 'Torstai', 'Perjantai', 'Lauantai', 'Sunnuntai'];
+  const headerRegex = new RegExp(`^(${daysEn.join('|')})\\b(.*)`, 'i');
+  const finStripRegex = new RegExp(`^(${daysFi.join('|')})[\\s–\\-—:]*`, 'i');
+
+  const sections = {};
+  const lines = notes.split(/\r?\n/);
+  let currentDay = null;
+  let buffer = [];
+
+  const flush = () => {
+    if (currentDay) sections[currentDay] = buffer.join('\n').replace(/^\s+|\s+$/g, '');
+  };
+
+  for (const line of lines) {
+    const m = line.match(headerRegex);
+    if (m) {
+      flush();
+      currentDay = m[1].toLowerCase();
+      buffer = [];
+      // Capture inline content after the day name, stripping separators + Finnish name
+      const rest = (m[2] || '').replace(/^[\s–\-—:]+/, '').trim();
+      const trimmed = rest.replace(finStripRegex, '').trim();
+      if (trimmed) buffer.push(trimmed);
+    } else if (currentDay) {
+      buffer.push(line);
+    }
+  }
+  flush();
+  return sections;
+}
+
+// Find every Vault entry that has a proper weekday structure (3+ day headers).
+function findScheduleVaultEntries() {
+  const daysEn = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const regex = new RegExp(`^(${daysEn.join('|')})\\b`, 'gmi');
+  return (data.vault || []).filter(v => {
+    if (!v.notes) return false;
+    const matches = v.notes.match(regex);
+    return matches && matches.length >= 3;
+  });
+}
+
+function renderTodaySchedules() {
+  const entries = findScheduleVaultEntries();
+  if (entries.length === 0) return '';
+
+  const daysEn = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const daysFi = ['Sunnuntai', 'Maanantai', 'Tiistai', 'Keskiviikko', 'Torstai', 'Perjantai', 'Lauantai'];
+  const dow = new Date().getDay();
+  const todayKey = daysEn[dow].toLowerCase();
+
+  const cards = entries.map(entry => {
+    const sections = parseWeekdaySections(entry.notes);
+    const schedule = sections[todayKey];
+    if (!schedule) return '';
+    return `
+      <div class="card schedule-today-card" style="margin-bottom: 24px;">
+        <div class="card-label">
+          <span><span class="accent"></span>${escapeHtml(entry.name)} · today</span>
+          <span class="schedule-today-day">${daysEn[dow].toUpperCase()} · ${daysFi[dow].toUpperCase()}</span>
+        </div>
+        <div class="schedule-today-content">${escapeHtml(schedule)}</div>
+      </div>
+    `;
+  }).filter(Boolean);
+
+  return cards.join('');
+}
+
 function renderToday() {
   // Quote
   const q = QUOTES[Math.floor(Math.random() * QUOTES.length)];
@@ -2001,6 +2097,7 @@ function renderToday() {
     wp.innerHTML = '';
   }
 
+  document.getElementById('today-schedules').innerHTML = renderTodaySchedules();
   renderThreeThings();
   renderExpiryToday();
   renderTodayMetrics();
@@ -2060,8 +2157,7 @@ function renderExpiryToday() {
       return { ...d, days: daysBetween(triggerDate) };
     })
     .filter(d => d.days !== null && d.days >= 0 && d.days <= 90)
-    .sort((a, b) => a.days - b.days)
-    .slice(0, 5);
+    .sort((a, b) => a.days - b.days);
 
   if (upcoming.length === 0) {
     wrap.innerHTML = '<div style="font-size: 13px; color: var(--ink-mute); padding: 8px 0;">Nothing urgent in the next 90 days.</div>';
