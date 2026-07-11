@@ -1123,6 +1123,12 @@ body::before {
 .schedule-today-card {
   border-left: 3px solid var(--teal);
 }
+.schedule-today-card.schedule-next {
+  border-left-color: var(--ink-mute);
+}
+.schedule-today-card.schedule-next .schedule-today-day {
+  color: var(--teal);
+}
 .schedule-today-day {
   color: var(--ink-mute);
   font-family: var(--font-mono);
@@ -2052,17 +2058,37 @@ function renderTodaySchedules() {
   const daysEn = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const daysFi = ['Sunnuntai', 'Maanantai', 'Tiistai', 'Keskiviikko', 'Torstai', 'Perjantai', 'Lauantai'];
   const dow = new Date().getDay();
-  const todayKey = daysEn[dow].toLowerCase();
 
   const cards = entries.map(entry => {
     const sections = parseWeekdaySections(entry.notes);
-    const schedule = sections[todayKey];
+    const todayKey = daysEn[dow].toLowerCase();
+    let schedule = sections[todayKey];
+    let isToday = true;
+    let showDow = dow;
+
+    // If today has no section, walk forward to find the next day that does
+    if (!schedule) {
+      for (let i = 1; i <= 7; i++) {
+        const nextDow = (dow + i) % 7;
+        const key = daysEn[nextDow].toLowerCase();
+        if (sections[key]) {
+          schedule = sections[key];
+          isToday = false;
+          showDow = nextDow;
+          break;
+        }
+      }
+    }
     if (!schedule) return '';
+
+    const label = isToday ? 'today' : (showDow === (dow + 1) % 7 ? 'tomorrow' : 'next ' + daysEn[showDow].toLowerCase());
+    const dayLabel = `${daysEn[showDow].toUpperCase()} · ${daysFi[showDow].toUpperCase()}`;
+
     return `
-      <div class="card schedule-today-card" style="margin-bottom: 24px;">
+      <div class="card schedule-today-card${isToday ? '' : ' schedule-next'}" style="margin-bottom: 24px;">
         <div class="card-label">
-          <span><span class="accent"></span>${escapeHtml(entry.name)} · today</span>
-          <span class="schedule-today-day">${daysEn[dow].toUpperCase()} · ${daysFi[dow].toUpperCase()}</span>
+          <span><span class="accent"></span>${escapeHtml(entry.name)} · ${label}</span>
+          <span class="schedule-today-day">${dayLabel}</span>
         </div>
         <div class="schedule-today-content">${escapeHtml(schedule)}</div>
       </div>
