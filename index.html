@@ -657,6 +657,173 @@ body::before {
 }
 @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
+/* ── Search overlay ─────────────────────────────────────────────── */
+.search-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,20,25,0.55);
+  backdrop-filter: blur(4px);
+  z-index: 250;
+  display: none;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 60px 20px 20px;
+  animation: fadeIn .18s ease;
+}
+.search-overlay.open { display: flex; }
+
+.search-panel {
+  background: var(--paper);
+  border-radius: 4px;
+  width: 100%;
+  max-width: 720px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-mid);
+  animation: slideUp .22s ease;
+  overflow: hidden;
+}
+
+.search-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper);
+}
+.search-input-row input {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 17px;
+  color: var(--ink);
+  padding: 6px 0;
+  outline: none;
+}
+.search-input-row input::placeholder { color: var(--ink-mute); }
+.search-close {
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--ink-mute);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  transition: all .15s ease;
+}
+.search-close:hover { border-color: var(--ink); color: var(--ink); }
+
+.search-results {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 8px 24px;
+}
+.search-hint {
+  padding: 24px 20px;
+  color: var(--ink-mute);
+  font-size: 14px;
+  font-family: var(--font-body);
+  line-height: 1.5;
+}
+.search-hint mark {
+  background: var(--paper-2);
+  color: var(--ink);
+  padding: 0 4px;
+  border-radius: 2px;
+}
+.search-count {
+  padding: 8px 20px 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+
+.search-group { padding: 0 8px 8px; }
+.search-group-head {
+  padding: 10px 12px 6px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--rule-soft);
+  margin-bottom: 4px;
+}
+.search-group-name {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--teal);
+  font-weight: 500;
+}
+.search-group-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-mute);
+}
+.search-group-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.search-result {
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 10px 12px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: background .12s ease;
+  width: 100%;
+}
+.search-result:hover { background: var(--paper-2); }
+.search-result-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 15px;
+  color: var(--ink);
+  font-variation-settings: 'opsz' 18;
+  line-height: 1.3;
+}
+.search-result-sub {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--ink-mute);
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+.search-result-snip {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-top: 5px;
+  line-height: 1.4;
+}
+.search-result mark {
+  background: var(--amber);
+  color: var(--paper);
+  padding: 0 2px;
+  border-radius: 2px;
+  font-weight: 600;
+}
+
+@media (max-width: 880px) {
+  .search-overlay { padding: 20px 12px 12px; }
+  .search-panel { max-height: 92vh; }
+  .search-input-row input { font-size: 16px; }
+  .search-result-title { font-size: 14px; }
+  .search-result-snip { font-size: 12px; }
+}
+
 .modal h3 {
   font-family: var(--font-display);
   font-weight: 500;
@@ -1412,6 +1579,7 @@ footer a:hover { color: var(--ink); border-color: var(--ink); }
         <span id="today-date" lang="en">—</span>
         <span id="today-date-fi" lang="fi">—</span>
       </div>
+      <button class="theme-toggle" id="search-toggle" onclick="openSearch()" aria-label="Search">Search</button>
       <button class="theme-toggle" id="theme-toggle">Theme</button>
     </div>
   </div>
@@ -1813,6 +1981,19 @@ footer a:hover { color: var(--ink); border-color: var(--ink); }
 <!-- ── Toast ─────────────────────────────────────────────────────── -->
 <div class="toast" id="toast">Saved</div>
 
+<!-- ── Search overlay ────────────────────────────────────────────── -->
+<div class="search-overlay" id="search-overlay" onclick="if(event.target===this) closeSearch()">
+  <div class="search-panel">
+    <div class="search-input-row">
+      <input type="text" id="search-input" placeholder="Search tasks, deadlines, notes, trips, everything…" autocomplete="off" spellcheck="false" oninput="renderSearchResults(this.value)" onkeydown="handleSearchKey(event)">
+      <button class="search-close" onclick="closeSearch()" aria-label="Close">×</button>
+    </div>
+    <div id="search-results" class="search-results">
+      <div class="search-hint">Start typing to search everything — tasks, deadlines, money snapshots, learning, applications, people, notes, vault, trips, and segments.</div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ════════════════════════════════════════════════════════════════════
 // LIFE OS — Application logic
@@ -1900,7 +2081,7 @@ function daysBetween(dateStr) {
 function formatDate(dateStr) {
   if (!dateStr) return '—';
   const d = new Date(dateStr + 'T00:00:00');
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 // Finnish day & month names (partitive for date display)
@@ -3162,7 +3343,7 @@ function formatTimestamp(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
     + ', ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 }
 
@@ -3318,6 +3499,232 @@ let _segDefault = {};
 function addSegment(tripId, type) {
   _segDefault = { tripId, type };
   openModal('tripseg');
+}
+
+// ── Universal search ────────────────────────────────────────────────
+function openSearch() {
+  const overlay = document.getElementById('search-overlay');
+  overlay.classList.add('open');
+  const input = document.getElementById('search-input');
+  input.value = '';
+  document.getElementById('search-results').innerHTML =
+    '<div class="search-hint">Start typing to search everything — tasks, deadlines, money snapshots, learning, applications, people, notes, vault, trips, and segments.</div>';
+  setTimeout(() => input.focus(), 60);
+}
+
+function closeSearch() {
+  document.getElementById('search-overlay').classList.remove('open');
+}
+
+function handleSearchKey(e) {
+  if (e.key === 'Escape') { closeSearch(); return; }
+  if (e.key === 'Enter') {
+    const first = document.querySelector('#search-results .search-result');
+    if (first) first.click();
+  }
+}
+
+function extractSnippet(text, q, radius) {
+  if (!text) return '';
+  radius = radius || 40;
+  const lower = text.toLowerCase();
+  const idx = lower.indexOf(q.toLowerCase());
+  if (idx === -1) return '';
+  const start = Math.max(0, idx - radius);
+  const end = Math.min(text.length, idx + q.length + radius * 2);
+  const before = start > 0 ? '…' : '';
+  const after = end < text.length ? '…' : '';
+  return before + text.slice(start, end).replace(/\s+/g, ' ').trim() + after;
+}
+
+// Highlight matches inside an escaped-HTML string (call escapeHtml BEFORE this)
+function highlightMatch(escapedText, q) {
+  if (!q) return escapedText;
+  const qEscaped = escapeHtml(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp('(' + qEscaped + ')', 'gi');
+  return escapedText.replace(re, '<mark>$1</mark>');
+}
+
+// Run the search across every data collection. Returns groups by module.
+function runUniversalSearch(query) {
+  const q = query.trim();
+  if (!q) return [];
+  const ql = q.toLowerCase();
+  const groups = [];
+
+  const has = (val) => val && String(val).toLowerCase().includes(ql);
+  const anyHas = (...vals) => vals.some(v => has(v));
+
+  // Tasks
+  const taskHits = (data.tasks || []).filter(t =>
+    anyHas(t.title, t.notes, t.category, t.status)
+  ).map(t => ({
+    title: t.title,
+    subtitle: [t.category, t.status, t.due ? 'due ' + formatDate(t.due) : ''].filter(Boolean).join(' · '),
+    snippet: extractSnippet(t.notes || '', ql),
+    action: `editTask('${t.id}')`,
+    routeHash: '#tasks'
+  }));
+  if (taskHits.length) groups.push({ module: 'Tasks', badge: 'tasks', items: taskHits });
+
+  // Deadlines
+  const dlHits = (data.deadlines || []).filter(d =>
+    anyHas(d.item, d.notes, d.category, d.country)
+  ).map(d => {
+    const days = daysBetween(d.expiry || d.startDate);
+    const daysText = days == null ? '' : (days < 0 ? `expired ${-days}d ago` : `${days}d`);
+    return {
+      title: d.item,
+      subtitle: [d.category, d.country, daysText].filter(Boolean).join(' · '),
+      snippet: extractSnippet(d.notes || '', ql),
+      action: `editDeadline('${d.id}')`,
+      routeHash: '#deadlines'
+    };
+  });
+  if (dlHits.length) groups.push({ module: 'Deadlines', badge: 'deadlines', items: dlHits });
+
+  // Money
+  const moneyHits = (data.money || []).filter(m =>
+    anyHas(m.category, m.notes, String(m.amount), m.currency)
+  ).map(m => ({
+    title: `${m.category || 'Snapshot'} · ${m.amount || 0} ${m.currency || ''}`.trim(),
+    subtitle: [m.type, m.date ? formatDate(m.date) : ''].filter(Boolean).join(' · '),
+    snippet: extractSnippet(m.notes || '', ql),
+    action: `editMoney('${m.id}')`,
+    routeHash: '#money'
+  }));
+  if (moneyHits.length) groups.push({ module: 'Money', badge: 'money', items: moneyHits });
+
+  // Learning
+  const learnHits = (data.learning || []).filter(l =>
+    anyHas(l.topic, l.notes, l.source, l.subject)
+  ).map(l => ({
+    title: l.topic || l.subject || 'Session',
+    subtitle: [l.subject, l.source, l.date ? formatDate(l.date) : '', l.duration ? l.duration + ' min' : ''].filter(Boolean).join(' · '),
+    snippet: extractSnippet(l.notes || '', ql),
+    action: `editLearn('${l.id}')`,
+    routeHash: '#learning'
+  }));
+  if (learnHits.length) groups.push({ module: 'Learning', badge: 'learning', items: learnHits });
+
+  // Applications
+  const appHits = (data.applications || []).filter(a =>
+    anyHas(a.company, a.role, a.notes, a.status, a.location)
+  ).map(a => ({
+    title: `${a.company || ''} — ${a.role || ''}`.replace(/^ — | — $/g, '').trim() || 'Application',
+    subtitle: [a.status, a.location, a.applied ? 'applied ' + formatDate(a.applied) : ''].filter(Boolean).join(' · '),
+    snippet: extractSnippet(a.notes || '', ql),
+    action: `editApp('${a.id}')`,
+    routeHash: '#career'
+  }));
+  if (appHits.length) groups.push({ module: 'Career', badge: 'career', items: appHits });
+
+  // People
+  const peopleHits = (data.people || []).filter(p =>
+    anyHas(p.name, p.role, p.notes, p.company, (p.tags || []).join(' '))
+  ).map(p => ({
+    title: p.name,
+    subtitle: [p.role, p.company, (p.tags || []).join(', ')].filter(Boolean).join(' · '),
+    snippet: extractSnippet(p.notes || '', ql),
+    action: `editPerson('${p.id}')`,
+    routeHash: '#people'
+  }));
+  if (peopleHits.length) groups.push({ module: 'People', badge: 'people', items: peopleHits });
+
+  // Notes (aka knowledge)
+  const noteHits = (data.knowledge || []).filter(n =>
+    anyHas(n.title, n.content, (n.tags || []).join(' '))
+  ).map(n => ({
+    title: n.title,
+    subtitle: (n.tags || []).join(', '),
+    snippet: extractSnippet(n.content || '', ql),
+    action: `editNote('${n.id}')`,
+    routeHash: '#notes'
+  }));
+  if (noteHits.length) groups.push({ module: 'Notes', badge: 'notes', items: noteHits });
+
+  // Vault
+  const vaultHits = (data.vault || []).filter(v =>
+    anyHas(v.name, v.notes, v.category, v.location)
+  ).map(v => {
+    const days = v.expiry ? daysBetween(v.expiry) : null;
+    const expText = days == null ? '' : (days < 0 ? `expired ${-days}d ago` : `${days}d`);
+    return {
+      title: v.name,
+      subtitle: [v.category, v.location, expText].filter(Boolean).join(' · '),
+      snippet: extractSnippet(v.notes || '', ql),
+      action: `editVault('${v.id}')`,
+      routeHash: '#vault'
+    };
+  });
+  if (vaultHits.length) groups.push({ module: 'Vault', badge: 'vault', items: vaultHits });
+
+  // Trips
+  const tripHits = (data.trips || []).filter(t =>
+    anyHas(t.name, t.destination, t.notes)
+  ).map(t => ({
+    title: t.name,
+    subtitle: [t.destination, t.startDate ? formatDate(t.startDate) : '', t.endDate ? '→ ' + formatDate(t.endDate) : ''].filter(Boolean).join(' · '),
+    snippet: extractSnippet(t.notes || '', ql),
+    action: `editTrip('${t.id}')`,
+    routeHash: '#travel'
+  }));
+  if (tripHits.length) groups.push({ module: 'Trips', badge: 'travel', items: tripHits });
+
+  // Trip segments
+  const segHits = (data.tripSegments || []).filter(s =>
+    anyHas(s.title, s.fromLoc, s.toLoc, s.vendor, s.confirmation, s.notes, s.type)
+  ).map(s => {
+    const trip = (data.trips || []).find(t => t.id === s.tripId);
+    const route = [s.fromLoc, s.toLoc].filter(Boolean).join(' → ');
+    return {
+      title: s.title || route || (s.type || 'Segment').toUpperCase(),
+      subtitle: [(s.type || '').toUpperCase(), route, s.vendor, s.confirmation ? 'Ref ' + s.confirmation : '', trip ? 'Trip: ' + trip.name : ''].filter(Boolean).join(' · '),
+      snippet: extractSnippet(s.notes || '', ql),
+      action: `editTripseg('${s.id}')`,
+      routeHash: '#travel'
+    };
+  });
+  if (segHits.length) groups.push({ module: 'Travel segments', badge: 'travel', items: segHits });
+
+  return groups;
+}
+
+function renderSearchResults(query) {
+  const wrap = document.getElementById('search-results');
+  const q = query.trim();
+  if (!q) {
+    wrap.innerHTML = '<div class="search-hint">Start typing to search everything — tasks, deadlines, money snapshots, learning, applications, people, notes, vault, trips, and segments.</div>';
+    return;
+  }
+
+  const groups = runUniversalSearch(q);
+  const totalCount = groups.reduce((s, g) => s + g.items.length, 0);
+
+  if (totalCount === 0) {
+    wrap.innerHTML = `<div class="search-hint">No matches for <mark>${escapeHtml(q)}</mark>.</div>`;
+    return;
+  }
+
+  const html = groups.map(g => `
+    <div class="search-group">
+      <div class="search-group-head">
+        <span class="search-group-name">${escapeHtml(g.module)}</span>
+        <span class="search-group-count">${g.items.length}</span>
+      </div>
+      <div class="search-group-items">
+        ${g.items.map(it => `
+          <button class="search-result" onclick="closeSearch(); ${it.action};">
+            <div class="search-result-title">${highlightMatch(escapeHtml(it.title || '(untitled)'), q)}</div>
+            ${it.subtitle ? `<div class="search-result-sub">${highlightMatch(escapeHtml(it.subtitle), q)}</div>` : ''}
+            ${it.snippet ? `<div class="search-result-snip">${highlightMatch(escapeHtml(it.snippet), q)}</div>` : ''}
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+
+  wrap.innerHTML = `<div class="search-count">${totalCount} match${totalCount === 1 ? '' : 'es'} across ${groups.length} module${groups.length === 1 ? '' : 's'}</div>${html}`;
 }
 
 function openModal(type, id) {
@@ -3765,6 +4172,21 @@ document.addEventListener('keydown', (e) => {
 
 // ── Init ───────────────────────────────────────────────────────────
 window.addEventListener('hashchange', route);
+
+// Global keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  // "/" opens search (unless typing in an input already)
+  if (e.key === '/' && !/^(input|textarea|select)$/i.test(e.target.tagName)) {
+    e.preventDefault();
+    openSearch();
+    return;
+  }
+  // Escape closes search
+  if (e.key === 'Escape' && document.getElementById('search-overlay').classList.contains('open')) {
+    closeSearch();
+  }
+});
+
 applyTheme();
 route();
 updateStorageStats();
