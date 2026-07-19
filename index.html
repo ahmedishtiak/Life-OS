@@ -442,6 +442,21 @@ body::before {
   font-size: 14px;
 }
 .expiry-row:last-child { border-bottom: 0; }
+.expiry-row.is-clickable {
+  cursor: pointer;
+  padding: 12px 8px;
+  margin: 0 -8px;
+  border-radius: 2px;
+  transition: background-color .12s ease;
+}
+.expiry-row.is-clickable:hover {
+  background: var(--paper);
+}
+.expiry-row.is-clickable:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: -2px;
+  background: var(--paper);
+}
 .expiry-name {
   font-weight: 500;
   color: var(--ink);
@@ -2591,7 +2606,7 @@ function renderExpiryToday() {
     const cls = d.days <= 30 ? 'days-crit' : d.days <= 60 ? 'days-warn' : 'days-watch';
     const lbl = d.days === 0 ? 'Today' : d.days === 1 ? 'Tomorrow' : d.days + 'd';
     const whenLine = formatEventDateline(d);
-    return `<div class="expiry-row">
+    return `<div class="expiry-row is-clickable" onclick="editDeadline('${d.id}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();editDeadline('${d.id}');}">
       <div>
         <div class="expiry-name">${escapeHtml(d.item)}</div>
         <div class="expiry-cat">${escapeHtml(d.category || '')} · ${escapeHtml(d.country || '')}${whenLine ? ' · ' + whenLine : ''}</div>
@@ -2601,7 +2616,8 @@ function renderExpiryToday() {
   }).join('');
 }
 
-// Compact dateline for an event/deadline (shows times when present, range when start≠end)
+// Compact dateline for an event/deadline shown on the Today page.
+// Always includes the actual date; times appear when set.
 function formatEventDateline(d) {
   if (!d.expiry && !d.startDate) return '';
   const start = d.startDate;
@@ -2609,22 +2625,16 @@ function formatEventDateline(d) {
   const sT = d.startTime;
   const eT = d.endTime;
 
-  // Same-day event with at least one time
-  if (start && end && start === end && (sT || eT)) {
+  // Same date (or start missing, or same-day range)
+  if (!start || start === end) {
+    const dateStr = formatDate(end || start);
     const times = [sT, eT].filter(Boolean).join('–');
-    return times;
+    return times ? `${dateStr} · ${times}` : dateStr;
   }
   // Multi-day range
-  if (start && end && start !== end) {
-    const sLbl = formatDate(start) + (sT ? ' ' + sT : '');
-    const eLbl = formatDate(end) + (eT ? ' ' + eT : '');
-    return sLbl + ' → ' + eLbl;
-  }
-  // Just end date with times
-  if (end && (sT || eT)) {
-    return [sT, eT].filter(Boolean).join('–');
-  }
-  return '';
+  const sLbl = formatDate(start) + (sT ? ' ' + sT : '');
+  const eLbl = formatDate(end) + (eT ? ' ' + eT : '');
+  return sLbl + ' → ' + eLbl;
 }
 
 function renderTodayMetrics() {
