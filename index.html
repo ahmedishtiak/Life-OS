@@ -1328,6 +1328,67 @@ body::before {
   font-size: 10px;
   letter-spacing: 0.14em;
 }
+.schedule-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.sched-nav-btn {
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--ink-mute);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all .12s ease;
+  font-family: var(--font-body);
+}
+.sched-nav-btn:hover {
+  border-color: var(--teal);
+  color: var(--teal);
+  background: var(--paper);
+}
+.sched-nav-btn.sched-reset {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+.sched-nav-btn.sched-reset:hover {
+  background: var(--teal);
+  color: var(--paper);
+}
+/* Notes blocks inside the schedule widget */
+.schedule-notes-section {
+  margin-top: 14px;
+  padding: 10px 12px;
+  background: var(--paper-2);
+  border-left: 2px solid var(--rule);
+  border-radius: 2px;
+}
+.schedule-notes-section.is-standing {
+  border-left-color: var(--teal);
+}
+.schedule-notes-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-bottom: 4px;
+}
+.schedule-notes-content {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
 .schedule-today-content {
   margin-top: 14px;
   font-size: 15px;
@@ -2459,50 +2520,169 @@ function findScheduleVaultEntries() {
   });
 }
 
+// Split a day's captured content at the first blank line:
+// primary = task tokens; anything below = day-specific notes.
+function splitDaySection(sectionText) {
+  if (!sectionText) return { tasks: '', notes: '' };
+  const parts = sectionText.split(/\n\s*\n/);
+  return {
+    tasks: (parts[0] || '').trim(),
+    notes: parts.slice(1).join('\n\n').trim()
+  };
+}
+
+// A paragraph counts as a standing note if it starts with a legend-style prefix
+// like "NB", "NB1:", "Note:", "Notes:", "Legend:", "General:", "Key:", "Ex:".
+function isStandingNoteParagraph(text) {
+  const t = text.trim();
+  return /^(NB\d*|Note[s]?|Legend|General|Key|Ex|E\.g\.)\s*[:.\-–—]/i.test(t);
+}
+
+// Split a "notes" block into standing paragraphs (NB, Legend, etc.) vs
+// day-specific paragraphs.
+function partitionNotes(rawNotes) {
+  if (!rawNotes) return { dayNotes: '', standing: '' };
+  const paragraphs = rawNotes.split(/\n\s*\n/);
+  const standing = [];
+  const dayNotes = [];
+  paragraphs.forEach(p => {
+    const trimmed = p.trim();
+    if (!trimmed) return;
+    if (isStandingNoteParagraph(trimmed)) standing.push(trimmed);
+    else dayNotes.push(trimmed);
+  });
+  return {
+    dayNotes: dayNotes.join('\n\n').trim(),
+    standing: standing.join('\n\n').trim()
+  };
+}
+
+// Content before the first weekday header acts as a standing note that
+// applies to every day.
+function extractStandingNotes(notes) {
+  if (!notes) return '';
+  const daysEn = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const re = new RegExp(`^(${daysEn.join('|')})\\b`, 'im');
+  const m = notes.match(re);
+  if (!m) return '';
+  const idx = notes.indexOf(m[0]);
+  return notes.slice(0, idx).trim();
+}
+
+// Which day of week the schedule widget is currently showing.
+// null = smart default (today, or next scheduled day on weekends).
+let _schedViewDow = null;
+
+function shiftScheduleDay(delta) {
+  const actualDow = new Date().getDay();
+  let cur = _schedViewDow !== null ? _schedViewDow : actualDow;
+  cur = ((cur + delta) % 7 + 7) % 7;
+  _schedViewDow = cur;
+  const wrap = document.getElementById('today-schedules');
+  if (wrap) wrap.innerHTML = renderTodaySchedules();
+}
+
+function resetScheduleDay() {
+  _schedViewDow = null;
+  const wrap = document.getElementById('today-schedules');
+  if (wrap) wrap.innerHTML = renderTodaySchedules();
+}
+
 function renderTodaySchedules() {
   const entries = findScheduleVaultEntries();
   if (entries.length === 0) return '';
 
   const daysEn = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const daysFi = ['Sunnuntai', 'Maanantai', 'Tiistai', 'Keskiviikko', 'Torstai', 'Perjantai', 'Lauantai'];
-  const dow = new Date().getDay();
+  const actualDow = new Date().getDay();
 
   const cards = entries.map(entry => {
     const sections = parseWeekdaySections(entry.notes);
-    const todayKey = daysEn[dow].toLowerCase();
-    let schedule = sections[todayKey];
-    let isToday = true;
-    let showDow = dow;
+    const beforeStanding = extractStandingNotes(entry.notes);
 
-    // If today has no section, walk forward to find the next day that does
-    if (!schedule) {
-      for (let i = 1; i <= 7; i++) {
-        const nextDow = (dow + i) % 7;
-        const key = daysEn[nextDow].toLowerCase();
-        if (sections[key]) {
-          schedule = sections[key];
-          isToday = false;
-          showDow = nextDow;
-          break;
+    // Collect ALL standing (NB-style) content from anywhere in the entry so it
+    // shows on every day, regardless of where the user placed it.
+    const standingPieces = [];
+    if (beforeStanding) standingPieces.push(beforeStanding);
+    const dayKeys = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+    dayKeys.forEach(dk => {
+      if (!sections[dk]) return;
+      const split = splitDaySection(sections[dk]);
+      const parts = partitionNotes(split.notes);
+      if (parts.standing) standingPieces.push(parts.standing);
+    });
+    const seen = new Set();
+    const allStanding = standingPieces.filter(p => !seen.has(p) && seen.add(p)).join('\n\n');
+
+    // Decide which day to show
+    let showDow;
+    if (_schedViewDow !== null) {
+      showDow = _schedViewDow;
+    } else {
+      showDow = actualDow;
+      if (!sections[daysEn[showDow].toLowerCase()]) {
+        for (let i = 1; i <= 7; i++) {
+          const cand = (actualDow + i) % 7;
+          if (sections[daysEn[cand].toLowerCase()]) { showDow = cand; break; }
         }
       }
     }
-    if (!schedule) return '';
 
-    const label = isToday ? 'today' : (showDow === (dow + 1) % 7 ? 'tomorrow' : 'next ' + daysEn[showDow].toLowerCase());
+    const sectionContent = sections[daysEn[showDow].toLowerCase()] || '';
+    const split = splitDaySection(sectionContent);
+    const taskText = split.tasks;
+    // For the selected day, show only day-specific notes; NB paragraphs are hoisted
+    // into the shared "Standing notes" block above.
+    const dayNotes = partitionNotes(split.notes).dayNotes;
+
+    // Label above the day (today / tomorrow / yesterday / day name)
+    let label;
+    if (showDow === actualDow) label = 'today';
+    else if (showDow === (actualDow + 1) % 7) label = 'tomorrow';
+    else if (showDow === (actualDow + 6) % 7) label = 'yesterday';
+    else label = daysEn[showDow].toLowerCase();
+
     const dayLabel = `${daysEn[showDow].toUpperCase()} · ${daysFi[showDow].toUpperCase()}`;
 
-    // Compute shift hours if this schedule looks like a work rota
-    const shift = computeShiftSummary(schedule);
+    // Content blocks
+    const scheduleContent = taskText
+      ? escapeHtml(taskText)
+      : `<em style="color: var(--ink-mute);">No schedule for ${escapeHtml(daysEn[showDow])}.</em>`;
+
+    const standingHtml = allStanding ? `
+      <div class="schedule-notes-section is-standing">
+        <div class="schedule-notes-label">Standing notes</div>
+        <div class="schedule-notes-content">${escapeHtml(allStanding)}</div>
+      </div>` : '';
+
+    const dayNotesHtml = dayNotes ? `
+      <div class="schedule-notes-section">
+        <div class="schedule-notes-label">Notes for ${escapeHtml(daysEn[showDow])}</div>
+        <div class="schedule-notes-content">${escapeHtml(dayNotes)}</div>
+      </div>` : '';
+
+    const shift = taskText ? computeShiftSummary(taskText) : null;
     const shiftHtml = shift ? renderShiftSummary(shift) : '';
 
+    // The "reset to today" affordance appears only when we're navigated away
+    const resetBtn = (showDow !== actualDow)
+      ? `<button class="sched-nav-btn sched-reset" onclick="resetScheduleDay()" title="Back to today">•</button>`
+      : '';
+
     return `
-      <div class="card schedule-today-card${isToday ? '' : ' schedule-next'}" style="margin-bottom: 24px;">
+      <div class="card schedule-today-card${label === 'today' ? '' : ' schedule-next'}" style="margin-bottom: 24px;">
         <div class="card-label">
           <span><span class="accent"></span>${escapeHtml(entry.name)} · ${label}</span>
-          <span class="schedule-today-day">${dayLabel}</span>
+          <div class="schedule-nav">
+            <button class="sched-nav-btn" onclick="shiftScheduleDay(-1)" title="Previous day" aria-label="Previous day">‹</button>
+            <span class="schedule-today-day">${dayLabel}</span>
+            <button class="sched-nav-btn" onclick="shiftScheduleDay(1)" title="Next day" aria-label="Next day">›</button>
+            ${resetBtn}
+          </div>
         </div>
-        <div class="schedule-today-content">${escapeHtml(schedule)}</div>
+        <div class="schedule-today-content">${scheduleContent}</div>
+        ${standingHtml}
+        ${dayNotesHtml}
         ${shiftHtml}
       </div>
     `;
