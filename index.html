@@ -1312,6 +1312,129 @@ body::before {
   background: var(--paper);
 }
 
+/* ── Today · Parking quick reference ─────────────────────────────── */
+.parking-card {
+  border-left: 3px solid var(--sage);
+}
+.parking-permit {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--sage);
+  font-weight: 500;
+  text-transform: uppercase;
+}
+.parking-body {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.parking-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.parking-icon {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.3;
+  width: 20px;
+  flex-shrink: 0;
+  text-align: center;
+}
+.parking-row.allowed .parking-icon { color: var(--sage); }
+.parking-row.not-allowed .parking-icon { color: var(--rust); }
+.parking-title {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--ink);
+  line-height: 1.4;
+}
+.parking-title strong {
+  font-weight: 600;
+  color: var(--ink);
+}
+.parking-sub {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--ink-mute);
+  text-transform: uppercase;
+  margin-top: 3px;
+  line-height: 1.4;
+}
+.parking-note {
+  margin-top: 6px;
+  padding: 10px 12px;
+  background: var(--paper-2);
+  border-left: 2px solid var(--sage);
+  border-radius: 2px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.4;
+}
+.parking-note strong {
+  color: var(--sage);
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+}
+
+.parking-spots {
+  margin-top: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule-soft);
+}
+.parking-spots-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-bottom: 12px;
+}
+.parking-spots-group {
+  margin-bottom: 12px;
+}
+.parking-spots-group:last-child { margin-bottom: 0; }
+.parking-spots-groupname {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sage);
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.parking-spots-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.parking-spot-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink);
+  background: var(--paper);
+  letter-spacing: 0.02em;
+}
+.parking-spot-chip.is-motorcycle {
+  border-color: var(--sage);
+  color: var(--sage);
+  background: color-mix(in srgb, var(--sage) 8%, var(--paper));
+}
+
 /* ── Today · Weekday schedule widget ─────────────────────────────── */
 .schedule-today-card {
   border-left: 3px solid var(--teal);
@@ -1403,6 +1526,62 @@ body::before {
   margin-top: 18px;
   padding-top: 14px;
   border-top: 1px solid var(--rule-soft);
+}
+
+/* Biweekly info panel */
+.biweekly-panel {
+  margin-top: 14px;
+  padding: 10px 12px;
+  background: var(--paper-2);
+  border-left: 2px solid var(--amber);
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.biweekly-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.biweekly-row {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 12px;
+  align-items: baseline;
+}
+.biweekly-task {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.biweekly-status {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 2px;
+}
+.biweekly-status.biweekly-on {
+  background: var(--sage);
+  color: var(--paper);
+}
+.biweekly-status.biweekly-off {
+  background: var(--paper);
+  color: var(--ink-mute);
+  border: 1px solid var(--rule);
+}
+.biweekly-next {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--ink-mute);
+  text-align: right;
 }
 .shift-row {
   display: flex;
@@ -1754,6 +1933,7 @@ footer a:hover { color: var(--ink); border-color: var(--ink); }
 
     <div id="welcome-panel"></div>
     <div id="today-schedules"></div>
+    <div id="today-parking"></div>
 
     <div class="grid grid-asym" style="margin-bottom: 32px;">
       <div class="card">
@@ -2426,18 +2606,61 @@ function splitScheduleTokens(text) {
   return tokens;
 }
 
-function computeShiftSummary(scheduleText) {
+// Given an anchor (Date) for a biweekly task, return the next date that is
+// ≥ fromDate and lands on the biweekly cycle.
+function nextBiweeklyDate(anchor, fromDate) {
+  const anchorMs = anchor.getTime();
+  const fromMs = fromDate.getTime();
+  const diffDays = Math.round((fromMs - anchorMs) / 86400000);
+  const cycles = Math.max(0, Math.ceil(diffDays / 14));
+  return new Date(anchorMs + cycles * 14 * 86400000);
+}
+
+// Is targetDate a biweekly-active day for a task with the given anchor?
+function isBiweeklyActive(anchorISO, targetDate) {
+  if (!anchorISO || !targetDate) return true;
+  const anchor = new Date(anchorISO + (anchorISO.length === 10 ? 'T00:00:00' : ''));
+  const t = new Date(targetDate); t.setHours(0, 0, 0, 0);
+  const a = new Date(anchor); a.setHours(0, 0, 0, 0);
+  const diffDays = Math.round((t - a) / 86400000);
+  return diffDays % 14 === 0;
+}
+
+function computeShiftSummary(scheduleText, options) {
   if (!scheduleText) return null;
+  options = options || {};
+  const targetDate = options.targetDate || null;
+  const anchors = options.anchors || {};
   const rawTokens = splitScheduleTokens(scheduleText);
   const looksLikeTask = (t) => /^[A-E]\d/i.test(t);
 
   const matched = [];
   const unmatched = [];
+  const biweeklySkipped = []; // { raw, minutes, base, nextDate }
+  const biweeklyIncluded = []; // { raw, minutes, base, todayIsActive }
+
   rawTokens.forEach(tok => {
     if (!looksLikeTask(tok)) return;
     const min = lookupTaskMinutes(tok);
-    if (min != null) matched.push({ raw: tok, minutes: min });
-    else unmatched.push(tok);
+    if (min == null) { unmatched.push(tok); return; }
+
+    // Biweekly check: only skip when we know the anchor
+    if (/biweekly/i.test(tok) && targetDate) {
+      const { base } = normalizeTaskToken(tok);
+      const anchor = anchors[base];
+      if (anchor) {
+        const active = isBiweeklyActive(anchor, targetDate);
+        const nextDate = nextBiweeklyDate(new Date(anchor + 'T00:00:00'), targetDate);
+        if (!active) {
+          biweeklySkipped.push({ raw: tok, minutes: min, base, nextDate });
+          return; // exclude from shift total
+        } else {
+          biweeklyIncluded.push({ raw: tok, minutes: min, base, nextDate });
+        }
+      }
+    }
+
+    matched.push({ raw: tok, minutes: min });
   });
 
   if (matched.length === 0) return null;
@@ -2450,6 +2673,8 @@ function computeShiftSummary(scheduleText) {
   return {
     matchedCount: matched.length,
     unmatched,
+    biweeklySkipped,
+    biweeklyIncluded,
     taskMinutes,
     machineMinutes: MACHINE_MINUTES,
     workMinutes,
@@ -2459,14 +2684,17 @@ function computeShiftSummary(scheduleText) {
 }
 
 function renderShiftSummary(s) {
-  const unknownNote = s.unmatched.length > 0
+  const unknownNote = s.unmatched && s.unmatched.length > 0
     ? `<div class="shift-unknown">Not counted: ${escapeHtml(s.unmatched.join(', '))}</div>` : '';
+  const skippedNote = s.biweeklySkipped && s.biweeklySkipped.length > 0
+    ? `<div class="shift-unknown">Off-week today · excluded: ${escapeHtml(s.biweeklySkipped.map(x => x.raw).join(', '))}</div>` : '';
   return `
     <div class="shift-summary">
       <div class="shift-row"><span>Task work</span><span>${formatHM(s.taskMinutes)}</span></div>
       <div class="shift-row"><span>Machine cleaning</span><span>${formatHM(s.machineMinutes)}</span></div>
       <div class="shift-row"><span>Rest break</span><span>${formatHM(s.breakMinutes)}</span></div>
       <div class="shift-row shift-total"><span>Estimated shift</span><span>${formatHM(s.totalMinutes)}</span></div>
+      ${skippedNote}
       ${unknownNote}
     </div>
   `;
@@ -2661,8 +2889,47 @@ function renderTodaySchedules() {
         <div class="schedule-notes-content">${escapeHtml(dayNotes)}</div>
       </div>` : '';
 
-    const shift = taskText ? computeShiftSummary(taskText) : null;
+    // Compute the actual Date for the shown day-of-week (this week's occurrence).
+    const targetDate = (() => {
+      const t = new Date();
+      t.setHours(0, 0, 0, 0);
+      t.setDate(t.getDate() + (showDow - actualDow));
+      return t;
+    })();
+    const anchors = (data.meta && data.meta.biweeklyAnchors) || {};
+
+    const shift = taskText ? computeShiftSummary(taskText, { targetDate, anchors }) : null;
     const shiftHtml = shift ? renderShiftSummary(shift) : '';
+
+    // Biweekly info block — always show upcoming next-occurrence for each
+    // biweekly task appearing in today's schedule (whether on or off week).
+    let biweeklyHtml = '';
+    if (shift && ((shift.biweeklyIncluded && shift.biweeklyIncluded.length) || (shift.biweeklySkipped && shift.biweeklySkipped.length))) {
+      const items = [...(shift.biweeklyIncluded || []), ...(shift.biweeklySkipped || [])];
+      const rows = items.map(it => {
+        const nextD = it.nextDate;
+        const diffDays = Math.round((nextD - targetDate) / 86400000);
+        const isTodayOn = shift.biweeklyIncluded.some(x => x.base === it.base);
+        const status = isTodayOn ? 'ON today' : 'OFF today';
+        const statusCls = isTodayOn ? 'biweekly-on' : 'biweekly-off';
+        const nextLabel = nextD.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+        const daysLabel = diffDays === 0 ? 'today' : diffDays === 14 ? 'in 14 days' : diffDays + 'd';
+        // De-dupe by base
+        return { base: it.base, isTodayOn, status, statusCls, nextLabel, daysLabel };
+      });
+      const seenB = new Set();
+      const uniq = rows.filter(r => !seenB.has(r.base) && seenB.add(r.base));
+      biweeklyHtml = `
+        <div class="biweekly-panel">
+          <div class="biweekly-label">Biweekly</div>
+          ${uniq.map(r => `
+            <div class="biweekly-row">
+              <div class="biweekly-task">${escapeHtml(r.base.replace(/\b\w/g, c => c.toUpperCase()))}</div>
+              <div class="biweekly-status ${r.statusCls}">${r.status}</div>
+              <div class="biweekly-next">next ${r.nextLabel} · ${r.daysLabel}</div>
+            </div>`).join('')}
+        </div>`;
+    }
 
     // The "reset to today" affordance appears only when we're navigated away
     const resetBtn = (showDow !== actualDow)
@@ -2681,6 +2948,7 @@ function renderTodaySchedules() {
           </div>
         </div>
         <div class="schedule-today-content">${scheduleContent}</div>
+        ${biweeklyHtml}
         ${standingHtml}
         ${dayNotesHtml}
         ${shiftHtml}
@@ -2689,6 +2957,100 @@ function renderTodaySchedules() {
   }).filter(Boolean);
 
   return cards.join('');
+}
+
+// ── Parking · Kirkkojärventie 10 quick reference ────────────────────
+// Only shows when the parking-contract vault entry exists in the user's data.
+function renderTodayParking() {
+  const entry = (data.vault || []).find(v => v.name && /LUPA_?24/i.test(v.name));
+  if (!entry) return '';
+
+  // 27 AB car spots + 1 motorcycle. Split as A1–A14 and B1–B13 by default;
+  // if the vault entry contains a "Spots:" or "AB spots:" line, that overrides.
+  let aSpots = Array.from({ length: 14 }, (_, i) => 'A' + (i + 1));
+  let bSpots = Array.from({ length: 13 }, (_, i) => 'B' + (i + 1));
+  let mcSpots = ['MC'];
+
+  const spotsLine = (entry.notes || '').match(/^(?:AB\s+)?[Ss]pots:\s*(.+)$/m);
+  if (spotsLine) {
+    // Parse ranges like "A1-A14, B1-B13, MC"
+    const parsed = { A: [], B: [], MC: [] };
+    spotsLine[1].split(',').forEach(chunk => {
+      const c = chunk.trim();
+      const rangeMatch = c.match(/^([A-Z]+)(\d+)\s*[-–]\s*(?:[A-Z]+)?(\d+)$/i);
+      if (rangeMatch) {
+        const prefix = rangeMatch[1].toUpperCase();
+        const start = parseInt(rangeMatch[2], 10);
+        const end = parseInt(rangeMatch[3], 10);
+        for (let i = start; i <= end; i++) {
+          const bucket = prefix === 'A' ? parsed.A : prefix === 'B' ? parsed.B : parsed.MC;
+          bucket.push(prefix + i);
+        }
+      } else if (c) {
+        const upper = c.toUpperCase();
+        if (upper.startsWith('A')) parsed.A.push(upper);
+        else if (upper.startsWith('B')) parsed.B.push(upper);
+        else parsed.MC.push(upper);
+      }
+    });
+    if (parsed.A.length || parsed.B.length || parsed.MC.length) {
+      aSpots = parsed.A;
+      bSpots = parsed.B;
+      mcSpots = parsed.MC.length ? parsed.MC : mcSpots;
+    }
+  }
+
+  const chip = (n, cls = '') => `<span class="parking-spot-chip${cls ? ' ' + cls : ''}">${escapeHtml(n)}</span>`;
+  const groupHtml = (name, items, extraClass = '') => items.length === 0 ? '' : `
+    <div class="parking-spots-group">
+      <div class="parking-spots-groupname">${name}</div>
+      <div class="parking-spots-grid">${items.map(n => chip(n, extraClass)).join('')}</div>
+    </div>`;
+
+  const totalCount = aSpots.length + bSpots.length + mcSpots.length;
+
+  return `
+    <div class="card parking-card" style="margin-bottom: 24px;">
+      <div class="card-label">
+        <span><span class="accent"></span>Parking · Kirkkojärventie 10</span>
+        <span class="parking-permit">LUPA_24</span>
+      </div>
+      <div class="parking-body">
+        <div class="parking-row allowed">
+          <span class="parking-icon" aria-hidden="true">✓</span>
+          <div>
+            <div class="parking-title">Any <strong>AB-marked</strong> spot in the Intro garage</div>
+            <div class="parking-sub">${totalCount} spots total · unnamed / free choice</div>
+          </div>
+        </div>
+        <div class="parking-row not-allowed">
+          <span class="parking-icon" aria-hidden="true">✗</span>
+          <div>
+            <div class="parking-title">Not: <strong>C</strong> or <strong>D</strong> spots</div>
+            <div class="parking-sub">Those belong to Lumo residents</div>
+          </div>
+        </div>
+        <div class="parking-row not-allowed">
+          <span class="parking-icon" aria-hidden="true">✗</span>
+          <div>
+            <div class="parking-title">Not: outside the garage on the housing association area</div>
+            <div class="parking-sub">Use public parking around the property instead</div>
+          </div>
+        </div>
+
+        <div class="parking-spots">
+          <div class="parking-spots-label">Choose from · ${totalCount} AB spots</div>
+          ${groupHtml('A side · ' + aSpots.length + ' spots', aSpots)}
+          ${groupHtml('B side · ' + bSpots.length + ' spots', bSpots)}
+          ${groupHtml('Motorcycle · ' + mcSpots.length, mcSpots, 'is-motorcycle')}
+        </div>
+
+        <div class="parking-note">
+          Show <strong>LUPA_24</strong> visibly on the dashboard from outside the car
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 function renderToday() {
@@ -2717,6 +3079,7 @@ function renderToday() {
   }
 
   document.getElementById('today-schedules').innerHTML = renderTodaySchedules();
+  document.getElementById('today-parking').innerHTML = renderTodayParking();
   renderThreeThings();
   renderExpiryToday();
   renderTodayMetrics();
@@ -5042,6 +5405,102 @@ document.addEventListener('keydown', (e) => {
 });
 
 applyTheme();
+
+// ── One-time seed: AP_22 parking rental contract ─────────────────────
+// Adds a Vault entry + 6 months of rent-due deadlines the first time this
+// user's browser loads the update. Uses a flag in data.meta.seeds so it
+// never runs twice, and skips if the user has already added similar items.
+(function seedParkingContractOnce() {
+  if (!data.meta.seeds) data.meta.seeds = {};
+  if (data.meta.seeds.parking_lupa_24) return;
+
+  // Skip if the user has manually added something similar
+  const hasVault = (data.vault || []).some(v =>
+    v.name && /lupa[_ ]?24|autopaikan/i.test(v.name));
+  const hasDeadline = (data.deadlines || []).some(d =>
+    d.item && /parking rent|autopaikk/i.test(d.item) && d.category === 'Bill');
+
+  if (!hasVault) {
+    data.vault.push({
+      id: uid(),
+      name: 'Parking rental — Kirkkojärventie 10 (LUPA_24)',
+      category: 'Property',
+      location: 'Docue signed · verify #MKXN9Y2V3LPPZRWD8E3Z',
+      expiry: null,
+      notes: [
+        'Contract: AUTOPAIKAN VUOKRASOPIMUS (car parking rental)',
+        'Reference: AP_22 · sopimus 5959',
+        'Landlord: As Oy Kaupunginpuiston Intro, Espoo · Kirkkojärventie 10',
+        'Parking permit: AB vapaapysäköintilupa · LUPA_24',
+        'Term: Toistaiseksi voimassa (indefinite)',
+        'Start date: 16 Jul 2026',
+        'Notice period: 1 month',
+        'Rent: 50.00 EUR / month',
+        'Due: 5th of every month · late interest per Finnish law',
+        'Deposit: None (Ei vakuutta)',
+        'Signed: Helsinki, 16 Jul 2026',
+        '',
+        'Terms:',
+        '- Free parking, no numbered slot (Ei nimettyjä paikkoja)',
+        '- Permit is personal — cannot be transferred to another tenant or new owner',
+        '- Two unpaid rent reminders → permit revoked entirely',
+        '- Permit must be visible on the dashboard from outside the car',
+        '- Subject to garage rules of order (Autohallin järjestyssäännöt)',
+        '- No car repairs, tire changes, washing, or idling in the garage',
+        '- No storage of car accessories in the parking hall (fire safety)'
+      ].join('\n')
+    });
+  }
+
+  if (!hasDeadline) {
+    // Seed the next 6 monthly rent-due dates so the upcoming ones surface
+    // in the 90-day Watch these widget on the Today page.
+    const months = [
+      { y: 2026, m: 8 },  { y: 2026, m: 9 },  { y: 2026, m: 10 },
+      { y: 2026, m: 11 }, { y: 2026, m: 12 }, { y: 2027, m: 1 }
+    ];
+    months.forEach(({ y, m }) => {
+      data.deadlines.push({
+        id: uid(),
+        item: 'Parking rent · Kirkkojärventie 10',
+        category: 'Bill',
+        country: 'FI',
+        startDate: null,
+        startTime: null,
+        expiry: `${y}-${String(m).padStart(2, '0')}-05`,
+        endTime: null,
+        leadMonths: null,
+        notes: '50 EUR to As Oy Kaupunginpuiston Intro · LUPA_24 permit · docue AP_22'
+      });
+    });
+  }
+
+  data.meta.seeds.parking_lupa_24 = new Date().toISOString();
+  saveData();
+  if (!hasVault || !hasDeadline) {
+    console.log('[seed] Parking contract LUPA_24 added to Vault and Deadlines.');
+  }
+})();
+
+// ── Biweekly task anchors ─────────────────────────────────────────
+// Anchor date for each biweekly task in the Work schedule. Every date that
+// is a whole multiple of 14 days from the anchor is an "on" day for the task.
+// Runs on every load but only writes when a value is missing.
+(function seedBiweeklyAnchors() {
+  if (!data.meta.biweeklyAnchors) data.meta.biweeklyAnchors = {};
+  let changed = false;
+  const defaults = {
+    'a1 outside': '2026-08-04'   // Tuesday
+  };
+  Object.entries(defaults).forEach(([key, iso]) => {
+    if (!data.meta.biweeklyAnchors[key]) {
+      data.meta.biweeklyAnchors[key] = iso;
+      changed = true;
+    }
+  });
+  if (changed) saveData();
+})();
+
 route();
 updateStorageStats();
 
