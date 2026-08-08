@@ -3129,16 +3129,41 @@ function toggleThreeThing(i) {
   renderThreeThings();
 }
 
+// Choose the "trigger date" for a deadline — the date that should drive the
+// countdown badge. Picks the nearest future date between startDate and expiry.
+// If start has already passed, expiry becomes the trigger.
+// Also returns the reason ('start' or 'expiry') and an extended window based
+// on the lead-months field (for renewals).
+function computeDeadlineTrigger(d, defaultWindowDays) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const parse = s => s ? new Date(s + 'T00:00:00') : null;
+  const startD = parse(d.startDate);
+  const expD = parse(d.expiry);
+
+  let trigger = null, reason = null;
+  if (startD && expD) {
+    if (startD >= today) { trigger = startD; reason = 'start'; }
+    else { trigger = expD; reason = 'expiry'; }
+  } else if (expD) {
+    trigger = expD; reason = 'expiry';
+  } else if (startD) {
+    trigger = startD; reason = 'start';
+  }
+
+  const leadMonths = parseFloat(d.leadMonths) || 0;
+  const windowDays = Math.max(defaultWindowDays || 90, Math.round(leadMonths * 30));
+
+  return { triggerDate: trigger ? trigger.toISOString().slice(0, 10) : null, reason, windowDays };
+}
+
 function renderExpiryToday() {
   const wrap = document.getElementById('expiry-list-today');
   const upcoming = data.deadlines
     .map(d => {
-      // For range deadlines with both start and expiry, the meaningful "deadline"
-      // is the expiry (when it's due), not the start (when the window opened).
-      const triggerDate = d.expiry || d.startDate;
-      return { ...d, days: daysBetween(triggerDate) };
+      const t = computeDeadlineTrigger(d, 90);
+      return { ...d, days: daysBetween(t.triggerDate), _reason: t.reason, _window: t.windowDays };
     })
-    .filter(d => d.days !== null && d.days >= 0 && d.days <= 90)
+    .filter(d => d.days !== null && d.days >= 0 && d.days <= d._window)
     .sort((a, b) => a.days - b.days);
 
   if (upcoming.length === 0) {
@@ -3147,7 +3172,10 @@ function renderExpiryToday() {
   }
   wrap.innerHTML = upcoming.map(d => {
     const cls = d.days <= 30 ? 'days-crit' : d.days <= 60 ? 'days-warn' : 'days-watch';
-    const lbl = d.days === 0 ? 'Today' : d.days === 1 ? 'Tomorrow' : d.days + 'd';
+    const prefix = d._reason === 'start' ? 'starts ' : '';
+    const lbl = d.days === 0 ? (d._reason === 'start' ? 'starts today' : 'Today')
+              : d.days === 1 ? (d._reason === 'start' ? 'starts tmrw' : 'Tomorrow')
+              : prefix + d.days + 'd';
     const whenLine = formatEventDateline(d);
     return `<div class="expiry-row is-clickable" onclick="editDeadline('${d.id}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();editDeadline('${d.id}');}">
       <div>
@@ -3405,10 +3433,11 @@ function editTask(id) { openModal('task', id); }
 function renderDeadlines() {
   const items = [...data.deadlines]
     .map(d => {
-      // For range deadlines with both start and expiry, the meaningful "deadline"
-      // is the expiry (when it's due), not the start (when the window opened).
-      const triggerDate = d.expiry || d.startDate;
-      return { ...d, days: daysBetween(triggerDate), triggerDate };
+      // Trigger date = nearest future of start / expiry; falls back to expiry if
+      // start has already passed. Extended window (for the Today page) honours
+      // the lead-months field for renewals.
+      const t = computeDeadlineTrigger(d, 90);
+      return { ...d, days: daysBetween(t.triggerDate), triggerDate: t.triggerDate, _reason: t.reason };
     })
     .sort((a, b) => {
       // Expired items go to the bottom
