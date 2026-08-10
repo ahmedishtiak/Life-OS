@@ -1434,6 +1434,12 @@ body::before {
   color: var(--sage);
   background: color-mix(in srgb, var(--sage) 8%, var(--paper));
 }
+.parking-spot-chip.is-temporary {
+  border-style: dashed;
+  border-color: var(--sage);
+  color: var(--sage);
+  background: color-mix(in srgb, var(--sage) 4%, var(--paper));
+}
 
 /* ── Today · Weekday schedule widget ─────────────────────────────── */
 .schedule-today-card {
@@ -2965,49 +2971,45 @@ function renderTodayParking() {
   const entry = (data.vault || []).find(v => v.name && /LUPA_?24/i.test(v.name));
   if (!entry) return '';
 
-  // 27 AB car spots + 1 motorcycle. Split as A1–A14 and B1–B13 by default;
-  // if the vault entry contains a "Spots:" or "AB spots:" line, that overrides.
-  let aSpots = Array.from({ length: 14 }, (_, i) => 'A' + (i + 1));
-  let bSpots = Array.from({ length: 13 }, (_, i) => 'B' + (i + 1));
-  let mcSpots = ['MC'];
+  // Zones on the Intro garage floor plan (Kirkkojärventie 10):
+  //  - Main AB row along the bottom (17 spots): 1–17
+  //  - AB cluster near Section E on the right (4 spots): 90–93
+  //  - AB cluster far right, below the C column (4 spots): 112–115
+  //  - LAB temporary spots (5 visible on plan): 20–24
+  const zones = [
+    { key: 'main',   label: 'AB row · along the bottom',       spots: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17] },
+    { key: 'near-e', label: 'AB right · next to Section E',    spots: [90,91,92,93] },
+    { key: 'far-r',  label: 'AB far right · below C column',   spots: [112,113,114,115] },
+    { key: 'lab',    label: 'LAB temporary · left of main row', spots: [20,21,22,23,24], chipClass: 'is-temporary' }
+  ];
 
+  // Optional override from the vault-entry notes:
+  //   Spots: 1-17, 90-93, 112-115, 20-24
+  // Numbers keep going into whichever zone the user grouped them under.
   const spotsLine = (entry.notes || '').match(/^(?:AB\s+)?[Ss]pots:\s*(.+)$/m);
   if (spotsLine) {
-    // Parse ranges like "A1-A14, B1-B13, MC"
-    const parsed = { A: [], B: [], MC: [] };
+    const flat = [];
     spotsLine[1].split(',').forEach(chunk => {
       const c = chunk.trim();
-      const rangeMatch = c.match(/^([A-Z]+)(\d+)\s*[-–]\s*(?:[A-Z]+)?(\d+)$/i);
+      const rangeMatch = c.match(/^(\d+)\s*[-–]\s*(\d+)$/);
       if (rangeMatch) {
-        const prefix = rangeMatch[1].toUpperCase();
-        const start = parseInt(rangeMatch[2], 10);
-        const end = parseInt(rangeMatch[3], 10);
-        for (let i = start; i <= end; i++) {
-          const bucket = prefix === 'A' ? parsed.A : prefix === 'B' ? parsed.B : parsed.MC;
-          bucket.push(prefix + i);
-        }
-      } else if (c) {
-        const upper = c.toUpperCase();
-        if (upper.startsWith('A')) parsed.A.push(upper);
-        else if (upper.startsWith('B')) parsed.B.push(upper);
-        else parsed.MC.push(upper);
-      }
+        const s = parseInt(rangeMatch[1], 10), e = parseInt(rangeMatch[2], 10);
+        for (let i = s; i <= e; i++) flat.push(i);
+      } else if (/^\d+$/.test(c)) flat.push(parseInt(c, 10));
     });
-    if (parsed.A.length || parsed.B.length || parsed.MC.length) {
-      aSpots = parsed.A;
-      bSpots = parsed.B;
-      mcSpots = parsed.MC.length ? parsed.MC : mcSpots;
+    if (flat.length) {
+      // Replace default with a single "Custom list" zone
+      zones.splice(0, zones.length, { key: 'custom', label: 'AB spots', spots: flat });
     }
   }
 
-  const chip = (n, cls = '') => `<span class="parking-spot-chip${cls ? ' ' + cls : ''}">${escapeHtml(n)}</span>`;
-  const groupHtml = (name, items, extraClass = '') => items.length === 0 ? '' : `
+  const totalCount = zones.reduce((s, z) => s + z.spots.length, 0);
+  const chip = (n, cls = '') => `<span class="parking-spot-chip${cls ? ' ' + cls : ''}">${n}</span>`;
+  const zoneHtml = (z) => z.spots.length === 0 ? '' : `
     <div class="parking-spots-group">
-      <div class="parking-spots-groupname">${name}</div>
-      <div class="parking-spots-grid">${items.map(n => chip(n, extraClass)).join('')}</div>
+      <div class="parking-spots-groupname">${escapeHtml(z.label)} · ${z.spots.length}</div>
+      <div class="parking-spots-grid">${z.spots.map(n => chip(n, z.chipClass || '')).join('')}</div>
     </div>`;
-
-  const totalCount = aSpots.length + bSpots.length + mcSpots.length;
 
   return `
     <div class="card parking-card" style="margin-bottom: 24px;">
@@ -3019,8 +3021,8 @@ function renderTodayParking() {
         <div class="parking-row allowed">
           <span class="parking-icon" aria-hidden="true">✓</span>
           <div>
-            <div class="parking-title">Any <strong>AB-marked</strong> spot in the Intro garage</div>
-            <div class="parking-sub">${totalCount} spots total · unnamed / free choice</div>
+            <div class="parking-title">Choose any vacant <strong>AB</strong> spot</div>
+            <div class="parking-sub">Confirmed by Ehta Management: “The parking hall is a free parking hall. You just choose a vacant spot.”</div>
           </div>
         </div>
         <div class="parking-row not-allowed">
@@ -3033,16 +3035,14 @@ function renderTodayParking() {
         <div class="parking-row not-allowed">
           <span class="parking-icon" aria-hidden="true">✗</span>
           <div>
-            <div class="parking-title">Not: outside the garage on the housing association area</div>
+            <div class="parking-title">Not: outside the garage</div>
             <div class="parking-sub">Use public parking around the property instead</div>
           </div>
         </div>
 
         <div class="parking-spots">
-          <div class="parking-spots-label">Choose from · ${totalCount} AB spots</div>
-          ${groupHtml('A side · ' + aSpots.length + ' spots', aSpots)}
-          ${groupHtml('B side · ' + bSpots.length + ' spots', bSpots)}
-          ${groupHtml('Motorcycle · ' + mcSpots.length, mcSpots, 'is-motorcycle')}
+          <div class="parking-spots-label">Free parking map · ${totalCount} numbered spots visible</div>
+          ${zones.map(zoneHtml).join('')}
         </div>
 
         <div class="parking-note">
