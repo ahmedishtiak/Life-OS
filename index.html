@@ -1313,6 +1313,147 @@ body::before {
 }
 
 /* ── Today · Parking quick reference ─────────────────────────────── */
+/* ── Today · Finnish language café widget ────────────────────────── */
+.langclub-card {
+  border-left: 3px solid var(--amber);
+}
+.langclub-card.is-next {
+  border-left-color: var(--rule);
+}
+.langclub-day {
+  color: var(--amber);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  font-weight: 500;
+}
+.langclub-card.is-next .langclub-day { color: var(--ink-mute); }
+.langclub-body {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.langclub-body-compact { gap: 10px; }
+.langclub-option {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.langclub-venue {
+  font-family: var(--font-display);
+  font-variation-settings: 'opsz' 20;
+  font-weight: 500;
+  font-size: 16px;
+  color: var(--ink);
+  line-height: 1.3;
+}
+.langclub-venue .langclub-fi {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--teal);
+}
+.langclub-area, .langclub-transit {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.4;
+}
+.langclub-time {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--amber);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  margin-top: 2px;
+}
+.langclub-season {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--ink-mute);
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+.langclub-note-inline {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--ink-mute);
+  font-style: italic;
+  line-height: 1.4;
+  margin-top: 4px;
+  padding-left: 8px;
+  border-left: 2px solid var(--rule-soft);
+}
+.langclub-source a {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--teal);
+  text-decoration: none;
+  letter-spacing: 0.05em;
+  border-bottom: 1px dotted var(--teal);
+}
+.langclub-source a:hover { border-bottom-style: solid; }
+.langclub-or {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: -4px 0;
+}
+.langclub-or::before, .langclub-or::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--rule-soft);
+}
+.langclub-or span {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.langclub-phrase {
+  padding: 10px 12px;
+  background: var(--paper-2);
+  border-left: 2px solid var(--amber);
+  border-radius: 2px;
+}
+.langclub-phrase-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-bottom: 3px;
+}
+.langclub-phrase-fi {
+  font-family: var(--font-display);
+  font-variation-settings: 'opsz' 18;
+  font-style: italic;
+  font-size: 15px;
+  color: var(--ink);
+  line-height: 1.4;
+}
+.langclub-phrase-en {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+.langclub-footer {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--ink-mute);
+  text-transform: uppercase;
+  padding-top: 4px;
+  border-top: 1px solid var(--rule-soft);
+}
+
+/* ── Today · Parking quick reference ─────────────────────────────── */
 .parking-card {
   border-left: 3px solid var(--sage);
 }
@@ -1940,6 +2081,7 @@ footer a:hover { color: var(--ink); border-color: var(--ink); }
     <div id="welcome-panel"></div>
     <div id="today-schedules"></div>
     <div id="today-parking"></div>
+    <div id="today-langclub"></div>
 
     <div class="grid grid-asym" style="margin-bottom: 32px;">
       <div class="card">
@@ -2967,6 +3109,190 @@ function renderTodaySchedules() {
 
 // ── Parking · Kirkkojärventie 10 quick reference ────────────────────
 // Only shows when the parking-contract vault entry exists in the user's data.
+// ── Finnish language cafés · Espoo · Today widget ──────────────────
+const LANG_CLUBS = {
+  1: [ // Monday
+    { venue: 'Sello Library', area: 'Leppävaara',
+      location: 'Inside Sello Mall, top floors',
+      transit: 'Train A, E, U, Y → Leppävaara station',
+      time: '17:00 – 18:30',
+      startDate: '2026-09-14', endDate: '2026-12-14',   // Fall 2026 semester per espoo.fi
+      notes: 'Very popular group. "Let\'s speak Finnish" — meets in the main library event space.',
+      source: 'espoo.fi',
+      url: 'https://www.espoo.fi/en/culture-and-leisure/libraries/language-cafes-espoo-libraries' },
+    { venue: 'Lippulaiva Library', area: 'Espoonlahti',
+      location: 'Inside Lippulaiva Mall',
+      transit: 'Metro M1 → Espoonlahti',
+      time: '17:30 – 19:00',
+      startDate: '2026-08-31', endDate: '2026-12-21',
+      notes: 'Alternative Monday option — a bit later start.',
+      source: 'espoo.fi',
+      url: 'https://www.espoo.fi/en/culture-and-leisure/libraries/language-cafes-espoo-libraries' }
+  ],
+  2: [ // Tuesday · usually 2 concurrent options
+    { venue: 'Iso Omena Library', area: 'Matinkylä',
+      location: 'Top floor of Iso Omena Mall',
+      transit: 'Metro M1 / M2 → Matinkylä',
+      time: '17:00 – 18:30',
+      startDate: '2026-01-13', endDate: '2026-12-15',   // Effectively year-round
+      notes: 'Runs year-round — most reliable option (short pauses around Christmas / Easter).',
+      source: 'espoo.fi',
+      url: 'https://www.espoo.fi/en/culture-and-leisure/libraries/language-cafes-espoo-libraries' },
+    { venue: 'Entresse Library', area: 'Espoon keskus',
+      location: 'Inside Entresse Mall · "Blue Room" (Sininen huone)',
+      transit: 'Walk from Espoon keskus train station',
+      time: '18:00 – 19:30',
+      startDate: '2026-08-18', endDate: '2026-12-08',   // Fall 2026 per espoo.fi
+      notes: 'Run by the Finnish Red Cross (Suomen Punainen Risti). Reading short texts together.',
+      source: 'espoo.fi',
+      url: 'https://www.espoo.fi/en/culture-and-leisure/libraries/language-cafes-espoo-libraries' }
+  ],
+  3: [ // Wednesday
+    { venue: 'Suvela Chapel', venueFi: 'Suvelan kappeli', area: 'Espoon keskus',
+      location: 'Kirstintie 24',
+      transit: 'Short walk / bus south of Espoon keskus station',
+      time: '18:00 – 19:00',
+      // No dated semester — parish page states it runs every Wednesday
+      notes: 'Run by the Espoo Parishes. Runs year-round; typically pauses around Christmas / Easter.',
+      source: 'espoonseurakunnat.fi',
+      url: 'https://www.espoonseurakunnat.fi/english/our-activities/clubs-and-activities-for-everyone/finnish-language-clubs' }
+  ]
+};
+
+const USEFUL_PHRASES = [
+  { fi: 'Hei! Voimmeko puhua suomea?', en: 'Hi! Can we speak Finnish?' },
+  { fi: 'Puhu vähän hitaammin, kiitos.', en: 'Speak a little slower, please.' },
+  { fi: 'Mitä "___" tarkoittaa?', en: 'What does "___" mean?' },
+  { fi: 'Voitko toistaa?', en: 'Can you repeat that?' },
+  { fi: 'Anteeksi, en ymmärrä.', en: "Sorry, I don't understand." },
+  { fi: 'Kiitos kahvista!', en: 'Thanks for the coffee!' }
+];
+
+function renderTodayLanguageClub() {
+  const daysEn = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const daysFi = ['Sunnuntai','Maanantai','Tiistai','Keskiviikko','Torstai','Perjantai','Lauantai'];
+  const now = new Date();
+  const dow = now.getDay();
+  const todayISO = now.getFullYear() + '-' +
+    String(now.getMonth() + 1).padStart(2, '0') + '-' +
+    String(now.getDate()).padStart(2, '0');
+
+  // A club is "in session" if today falls within its start/end range.
+  // Clubs without dates (like Suvela Chapel) are treated as always in session.
+  const isInSession = (c) => {
+    if (c.startDate && todayISO < c.startDate) return false;
+    if (c.endDate && todayISO > c.endDate) return false;
+    return true;
+  };
+  const daysBetweenISO = (from, to) => Math.round((new Date(to) - new Date(from)) / 86400000);
+  const shortDate = (iso) => {
+    const d = new Date(iso + 'T00:00:00');
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  };
+
+  // Rotating phrase — advances once per day
+  const phraseIdx = Math.floor(now.getTime() / 86400000) % USEFUL_PHRASES.length;
+  const phrase = USEFUL_PHRASES[phraseIdx];
+
+  const phraseBlock = `
+    <div class="langclub-phrase">
+      <div class="langclub-phrase-label">Useful phrase</div>
+      <div class="langclub-phrase-fi">"${escapeHtml(phrase.fi)}"</div>
+      <div class="langclub-phrase-en">→ ${escapeHtml(phrase.en)}</div>
+    </div>`;
+
+  const clubBlock = (c, showOr) => {
+    const dateSpan = (c.startDate || c.endDate)
+      ? `<div class="langclub-season">Season: ${c.startDate ? shortDate(c.startDate) : '—'} → ${c.endDate ? shortDate(c.endDate) : '—'}</div>`
+      : '';
+    const sourceLink = c.url
+      ? `<div class="langclub-source"><a href="${c.url}" target="_blank" rel="noopener">verify · ${escapeHtml(c.source)}</a></div>`
+      : '';
+    return `
+      ${showOr ? '<div class="langclub-or"><span>or</span></div>' : ''}
+      <div class="langclub-option">
+        <div class="langclub-venue">★ ${escapeHtml(c.venue)}${c.venueFi ? ` <span class="langclub-fi">(${escapeHtml(c.venueFi)})</span>` : ''}</div>
+        <div class="langclub-area">${escapeHtml(c.area)} · ${escapeHtml(c.location)}</div>
+        <div class="langclub-transit">→ ${escapeHtml(c.transit)}</div>
+        <div class="langclub-time">${escapeHtml(c.time)}</div>
+        ${dateSpan}
+        ${c.notes ? `<div class="langclub-note-inline">${escapeHtml(c.notes)}</div>` : ''}
+        ${sourceLink}
+      </div>`;
+  };
+
+  const todayClubs = LANG_CLUBS[dow] || [];
+  const activeToday = todayClubs.filter(isInSession);
+
+  // Case 1: at least one club in session today — show them prominently
+  if (activeToday.length > 0) {
+    const chooseLabel = activeToday.length > 1 ? ' · choose 1' : '';
+    const dayLabel = `${daysEn[dow].toUpperCase()} · ${daysFi[dow].toUpperCase()}${chooseLabel}`;
+    return `
+      <div class="card langclub-card" style="margin-bottom: 24px;">
+        <div class="card-label">
+          <span><span class="accent"></span>Finnish language café · today</span>
+          <span class="langclub-day">${dayLabel}</span>
+        </div>
+        <div class="langclub-body">
+          ${activeToday.map((c, i) => clubBlock(c, i > 0)).join('')}
+          ${phraseBlock}
+          <div class="langclub-footer">Free · Drop-in · All levels welcome · Dates verified from official sources</div>
+        </div>
+      </div>`;
+  }
+
+  // Case 2: no active club today — find next dow with an in-session club
+  let nextDow = null, gap = 0, nextClub = null;
+  for (let i = 1; i <= 7; i++) {
+    const cand = (dow + i) % 7;
+    const clubs = (LANG_CLUBS[cand] || []).filter(isInSession);
+    if (clubs.length > 0) { nextDow = cand; gap = i; nextClub = clubs[0]; break; }
+  }
+
+  // Case 3: nothing in session in the next 7 days — check what's starting soon
+  if (nextClub === null) {
+    let soonestClub = null, soonestDays = Infinity, soonestDow = null;
+    Object.entries(LANG_CLUBS).forEach(([dk, clubs]) => {
+      clubs.forEach(c => {
+        if (c.startDate && c.startDate > todayISO) {
+          const d = daysBetweenISO(todayISO, c.startDate);
+          if (d < soonestDays) { soonestDays = d; soonestClub = c; soonestDow = parseInt(dk, 10); }
+        }
+      });
+    });
+    if (!soonestClub) return '';
+    return `
+      <div class="card langclub-card is-next" style="margin-bottom: 24px;">
+        <div class="card-label">
+          <span><span class="accent"></span>Finnish language café · off-season</span>
+          <span class="langclub-day">RESUMES ${daysEn[soonestDow].toUpperCase()}</span>
+        </div>
+        <div class="langclub-body langclub-body-compact">
+          <div class="langclub-venue">★ ${escapeHtml(soonestClub.venue)}</div>
+          <div class="langclub-area">${escapeHtml(soonestClub.area)} · ${escapeHtml(soonestClub.time)}</div>
+          <div class="langclub-season">Starts ${shortDate(soonestClub.startDate)} · ${soonestDays}d away</div>
+          ${phraseBlock}
+        </div>
+      </div>`;
+  }
+
+  // Compact "next" reminder for a club that's coming up in the current week
+  const whenLabel = gap === 1 ? 'tomorrow' : daysEn[nextDow].toLowerCase();
+  return `
+    <div class="card langclub-card is-next" style="margin-bottom: 24px;">
+      <div class="card-label">
+        <span><span class="accent"></span>Finnish language café · ${whenLabel}</span>
+        <span class="langclub-day">${daysEn[nextDow].toUpperCase()} · ${daysFi[nextDow].toUpperCase()}</span>
+      </div>
+      <div class="langclub-body langclub-body-compact">
+        <div class="langclub-venue">★ ${escapeHtml(nextClub.venue)}</div>
+        <div class="langclub-area">${escapeHtml(nextClub.area)} · ${escapeHtml(nextClub.time)}</div>
+        ${phraseBlock}
+      </div>
+    </div>`;
+}
+
 function renderTodayParking() {
   const entry = (data.vault || []).find(v => v.name && /LUPA_?24/i.test(v.name));
   if (!entry) return '';
@@ -3080,6 +3406,7 @@ function renderToday() {
 
   document.getElementById('today-schedules').innerHTML = renderTodaySchedules();
   document.getElementById('today-parking').innerHTML = renderTodayParking();
+  document.getElementById('today-langclub').innerHTML = renderTodayLanguageClub();
   renderThreeThings();
   renderExpiryToday();
   renderTodayMetrics();
