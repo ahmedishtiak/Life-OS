@@ -2080,21 +2080,25 @@ footer a:hover { color: var(--ink); border-color: var(--ink); }
 
     <div id="welcome-panel"></div>
     <div id="today-schedules"></div>
-    <div id="today-parking"></div>
+
+    <!-- Watch these · deadlines coming up (full-width, top-of-fold priority) -->
+    <div class="card tinted" style="margin-bottom: 32px;">
+      <div class="card-label"><span><span class="accent"></span>Expiring</span><span>next 90 days</span></div>
+      <h3 style="margin-bottom: 18px;">Watch these.</h3>
+      <div class="expiry-list" id="expiry-list-today"></div>
+    </div>
+
     <div id="today-langclub"></div>
 
-    <div class="grid grid-asym" style="margin-bottom: 32px;">
-      <div class="card">
-        <div class="card-label"><span><span class="accent"></span>Three things</span><span id="three-things-date">today</span></div>
-        <h3 style="margin-bottom: 18px;">What earns this day its name</h3>
-        <div class="three-things" id="three-things"></div>
-      </div>
-      <div class="card tinted">
-        <div class="card-label"><span><span class="accent"></span>Expiring</span><span>next 90 days</span></div>
-        <h3 style="margin-bottom: 18px;">Watch these.</h3>
-        <div class="expiry-list" id="expiry-list-today"></div>
-      </div>
+    <!-- Three things · reflective, lower priority -->
+    <div class="card" style="margin-bottom: 32px;">
+      <div class="card-label"><span><span class="accent"></span>Three things</span><span id="three-things-date">today</span></div>
+      <h3 style="margin-bottom: 18px;">What earns this day its name</h3>
+      <div class="three-things" id="three-things"></div>
     </div>
+
+    <!-- Parking reference · rarely-changing, lower priority -->
+    <div id="today-parking"></div>
 
     <div class="grid grid-3" style="margin-bottom: 32px;">
       <div class="card">
