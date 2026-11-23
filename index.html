@@ -430,8 +430,22 @@ body::before {
 }
 .three-things-add:hover { border-color: var(--ink); color: var(--ink); }
 
-/* Expiry list */
-.expiry-list { display: flex; flex-direction: column; }
+/* Expiry list — cap at ~3 rows on the Today page, let the rest scroll inside the card */
+.expiry-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 340px;         /* ~3 rows visible before internal scroll */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule) transparent;
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent);
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent);
+}
+.expiry-list::-webkit-scrollbar { width: 6px; }
+.expiry-list::-webkit-scrollbar-track { background: transparent; }
+.expiry-list::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
 .expiry-row {
   display: grid;
   grid-template-columns: 1fr auto auto;
@@ -626,6 +640,38 @@ body::before {
   flex-wrap: wrap;
 }
 .toolbar .right { margin-left: auto; display: flex; gap: 8px; }
+.filter-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.filter-group select {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  padding: 6px 28px 6px 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  border-radius: 3px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%23928B7D' stroke-width='1.3' fill='none' stroke-linecap='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  transition: border-color .12s ease;
+}
+.filter-group select:hover,
+.filter-group select:focus {
+  border-color: var(--teal);
+  outline: none;
+}
+@media (max-width: 640px) {
+  .filter-group { width: 100%; }
+  .filter-group select { flex: 1 1 calc(50% - 4px); min-width: 0; }
+}
 
 .empty {
   padding: 60px 20px;
@@ -1471,6 +1517,11 @@ body::before {
   flex-direction: column;
   gap: 12px;
 }
+.parking-body-inline {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--rule-soft);
+}
 .parking-row {
   display: flex;
   align-items: flex-start;
@@ -2097,9 +2148,6 @@ footer a:hover { color: var(--ink); border-color: var(--ink); }
       <div class="three-things" id="three-things"></div>
     </div>
 
-    <!-- Parking reference · rarely-changing, lower priority -->
-    <div id="today-parking"></div>
-
     <div class="grid grid-3" style="margin-bottom: 32px;">
       <div class="card">
         <div class="card-label"><span><span class="accent"></span>Net worth</span></div>
@@ -2160,6 +2208,22 @@ footer a:hover { color: var(--ink); border-color: var(--ink); }
     </div>
     <div class="toolbar">
       <button class="btn primary" onclick="openModal('deadline')">+ New item</button>
+      <div class="filter-group">
+        <select id="deadline-status" onchange="renderDeadlines()" aria-label="Status filter">
+          <option value="active">Active only</option>
+          <option value="all" selected>All</option>
+          <option value="expired">Expired</option>
+          <option value="upcoming">Upcoming (not started)</option>
+          <option value="due-30">Due within 30 days</option>
+          <option value="due-90">Due within 90 days</option>
+        </select>
+        <select id="deadline-category" onchange="renderDeadlines()" aria-label="Category filter">
+          <option value="">All categories</option>
+        </select>
+        <select id="deadline-country" onchange="renderDeadlines()" aria-label="Country filter">
+          <option value="">All countries</option>
+        </select>
+      </div>
       <div class="right">
         <span class="meta" id="deadline-count">—</span>
       </div>
@@ -3307,15 +3371,13 @@ function renderTodayLanguageClub() {
     </div>`;
 }
 
-function renderTodayParking() {
-  const entry = (data.vault || []).find(v => v.name && /LUPA_?24/i.test(v.name));
+// Inline parking map rendered inside the Vault entry (LUPA_24) when it's expanded.
+// Returns an HTML fragment — no outer card wrapper, since the Vault <details>
+// already provides one.
+function renderParkingMapBody(entry) {
   if (!entry) return '';
 
-  // Zones on the Intro garage floor plan (Kirkkojärventie 10):
-  //  - Main AB row along the bottom (17 spots): 1–17
-  //  - AB cluster near Section E on the right (4 spots): 90–93
-  //  - AB cluster far right, below the C column (4 spots): 112–115
-  //  - LAB temporary spots (5 visible on plan): 20–24
+  // Zones on the Intro garage floor plan (Kirkkojärventie 10)
   const zones = [
     { key: 'main',   label: 'AB row · along the bottom',       spots: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17] },
     { key: 'near-e', label: 'AB right · next to Section E',    spots: [90,91,92,93] },
@@ -3323,9 +3385,7 @@ function renderTodayParking() {
     { key: 'lab',    label: 'LAB temporary · left of main row', spots: [20,21,22,23,24], chipClass: 'is-temporary' }
   ];
 
-  // Optional override from the vault-entry notes:
-  //   Spots: 1-17, 90-93, 112-115, 20-24
-  // Numbers keep going into whichever zone the user grouped them under.
+  // Optional override: "Spots: 1-17, 90-93, 112-115, 20-24" in the vault notes
   const spotsLine = (entry.notes || '').match(/^(?:AB\s+)?[Ss]pots:\s*(.+)$/m);
   if (spotsLine) {
     const flat = [];
@@ -3337,10 +3397,7 @@ function renderTodayParking() {
         for (let i = s; i <= e; i++) flat.push(i);
       } else if (/^\d+$/.test(c)) flat.push(parseInt(c, 10));
     });
-    if (flat.length) {
-      // Replace default with a single "Custom list" zone
-      zones.splice(0, zones.length, { key: 'custom', label: 'AB spots', spots: flat });
-    }
+    if (flat.length) zones.splice(0, zones.length, { key: 'custom', label: 'AB spots', spots: flat });
   }
 
   const totalCount = zones.reduce((s, z) => s + z.spots.length, 0);
@@ -3352,42 +3409,36 @@ function renderTodayParking() {
     </div>`;
 
   return `
-    <div class="card parking-card" style="margin-bottom: 24px;">
-      <div class="card-label">
-        <span><span class="accent"></span>Parking · Kirkkojärventie 10</span>
-        <span class="parking-permit">LUPA_24</span>
+    <div class="parking-body parking-body-inline">
+      <div class="parking-row allowed">
+        <span class="parking-icon" aria-hidden="true">✓</span>
+        <div>
+          <div class="parking-title">Choose any vacant <strong>AB</strong> spot</div>
+          <div class="parking-sub">Confirmed by Ehta Management: “The parking hall is a free parking hall. You just choose a vacant spot.”</div>
+        </div>
       </div>
-      <div class="parking-body">
-        <div class="parking-row allowed">
-          <span class="parking-icon" aria-hidden="true">✓</span>
-          <div>
-            <div class="parking-title">Choose any vacant <strong>AB</strong> spot</div>
-            <div class="parking-sub">Confirmed by Ehta Management: “The parking hall is a free parking hall. You just choose a vacant spot.”</div>
-          </div>
+      <div class="parking-row not-allowed">
+        <span class="parking-icon" aria-hidden="true">✗</span>
+        <div>
+          <div class="parking-title">Not: <strong>C</strong> or <strong>D</strong> spots</div>
+          <div class="parking-sub">Those belong to Lumo residents</div>
         </div>
-        <div class="parking-row not-allowed">
-          <span class="parking-icon" aria-hidden="true">✗</span>
-          <div>
-            <div class="parking-title">Not: <strong>C</strong> or <strong>D</strong> spots</div>
-            <div class="parking-sub">Those belong to Lumo residents</div>
-          </div>
+      </div>
+      <div class="parking-row not-allowed">
+        <span class="parking-icon" aria-hidden="true">✗</span>
+        <div>
+          <div class="parking-title">Not: outside the garage</div>
+          <div class="parking-sub">Use public parking around the property instead</div>
         </div>
-        <div class="parking-row not-allowed">
-          <span class="parking-icon" aria-hidden="true">✗</span>
-          <div>
-            <div class="parking-title">Not: outside the garage</div>
-            <div class="parking-sub">Use public parking around the property instead</div>
-          </div>
-        </div>
+      </div>
 
-        <div class="parking-spots">
-          <div class="parking-spots-label">Free parking map · ${totalCount} numbered spots visible</div>
-          ${zones.map(zoneHtml).join('')}
-        </div>
+      <div class="parking-spots">
+        <div class="parking-spots-label">Free parking map · ${totalCount} numbered spots visible</div>
+        ${zones.map(zoneHtml).join('')}
+      </div>
 
-        <div class="parking-note">
-          Show <strong>LUPA_24</strong> visibly on the dashboard from outside the car
-        </div>
+      <div class="parking-note">
+        Show <strong>LUPA_24</strong> visibly on the dashboard from outside the car
       </div>
     </div>
   `;
@@ -3419,7 +3470,6 @@ function renderToday() {
   }
 
   document.getElementById('today-schedules').innerHTML = renderTodaySchedules();
-  document.getElementById('today-parking').innerHTML = renderTodayParking();
   document.getElementById('today-langclub').innerHTML = renderTodayLanguageClub();
   renderThreeThings();
   renderExpiryToday();
@@ -3776,30 +3826,80 @@ function editTask(id) { openModal('task', id); }
 
 // ── DEADLINES ───────────────────────────────────────────────────────
 function renderDeadlines() {
-  const items = [...data.deadlines]
+  // Populate the category & country dropdowns with distinct values from the data
+  // (keeping whatever option is currently selected)
+  const catSel = document.getElementById('deadline-category');
+  const countrySel = document.getElementById('deadline-country');
+  if (catSel) {
+    const cats = [...new Set(data.deadlines.map(d => d.category).filter(Boolean))].sort();
+    const curCat = catSel.value;
+    catSel.innerHTML = '<option value="">All categories</option>' +
+      cats.map(c => `<option value="${escapeAttr(c)}"${c === curCat ? ' selected' : ''}>${escapeHtml(c)}</option>`).join('');
+  }
+  if (countrySel) {
+    const countries = [...new Set(data.deadlines.map(d => d.country).filter(Boolean))].sort();
+    const curCountry = countrySel.value;
+    countrySel.innerHTML = '<option value="">All countries</option>' +
+      countries.map(c => `<option value="${escapeAttr(c)}"${c === curCountry ? ' selected' : ''}>${escapeHtml(c)}</option>`).join('');
+  }
+
+  const statusFilter = (document.getElementById('deadline-status') || { value: 'all' }).value;
+  const catFilter = catSel ? catSel.value : '';
+  const countryFilter = countrySel ? countrySel.value : '';
+  const totalAll = data.deadlines.length;
+
+  const items = data.deadlines
     .map(d => {
-      // Trigger date = nearest future of start / expiry; falls back to expiry if
-      // start has already passed. Extended window (for the Today page) honours
-      // the lead-months field for renewals.
       const t = computeDeadlineTrigger(d, 90);
       return { ...d, days: daysBetween(t.triggerDate), triggerDate: t.triggerDate, _reason: t.reason };
     })
+    .filter(d => {
+      // Status filter
+      if (statusFilter === 'active') {
+        if (d.days === null) return true;      // undated → treat as active
+        if (d.days < 0) return false;
+      } else if (statusFilter === 'expired') {
+        if (d.days === null || d.days >= 0) return false;
+      } else if (statusFilter === 'upcoming') {
+        // Not yet started: start date is still in the future
+        if (d._reason !== 'start') return false;
+        if (d.days === null || d.days < 0) return false;
+      } else if (statusFilter === 'due-30') {
+        if (d.days === null || d.days < 0 || d.days > 30) return false;
+      } else if (statusFilter === 'due-90') {
+        if (d.days === null || d.days < 0 || d.days > 90) return false;
+      }
+      // Category filter
+      if (catFilter && d.category !== catFilter) return false;
+      // Country filter
+      if (countryFilter && d.country !== countryFilter) return false;
+      return true;
+    })
     .sort((a, b) => {
-      // Expired items go to the bottom
       const aExp = a.days !== null && a.days < 0;
       const bExp = b.days !== null && b.days < 0;
       if (aExp && !bExp) return 1;
       if (!aExp && bExp) return -1;
-      // Both expired: most recently expired first (closer to 0)
       if (aExp && bExp) return b.days - a.days;
-      // Both upcoming: soonest first
       return (a.days ?? 99999) - (b.days ?? 99999);
     });
-  document.getElementById('deadline-count').textContent = `${items.length} tracked`;
+
+  // Count label reflects filter state
+  const countEl = document.getElementById('deadline-count');
+  if (items.length === totalAll) {
+    countEl.textContent = `${totalAll} tracked`;
+  } else {
+    countEl.textContent = `${items.length} of ${totalAll} tracked`;
+  }
+
   const wrap = document.getElementById('deadlines-list');
 
-  if (items.length === 0) {
+  if (totalAll === 0) {
     wrap.innerHTML = `<div class="empty"><h4>No deadlines tracked</h4><p>Start with your residence permit, passport, and health insurance. Missing one is a six-figure problem.</p></div>`;
+    return;
+  }
+  if (items.length === 0) {
+    wrap.innerHTML = `<div class="empty"><h4>No matches</h4><p>No deadlines match the selected filters. <button class="btn" onclick="resetDeadlineFilters()">Clear filters</button></p></div>`;
     return;
   }
 
@@ -3919,6 +4019,16 @@ function formatDeadlineWhen(d) {
 }
 
 function editDeadline(id) { openModal('deadline', id); }
+
+function resetDeadlineFilters() {
+  const s = document.getElementById('deadline-status');
+  const c = document.getElementById('deadline-category');
+  const co = document.getElementById('deadline-country');
+  if (s) s.value = 'all';
+  if (c) c.value = '';
+  if (co) co.value = '';
+  renderDeadlines();
+}
 
 // ── MONEY ───────────────────────────────────────────────────────────
 function renderMoney() {
@@ -4391,8 +4501,12 @@ function renderVault() {
       rightHtml = '<span></span>';
     }
 
+    // Special case: the LUPA_24 parking entry gets an inline map inside its body
+    const isParking = d.name && /LUPA_?24/i.test(d.name);
+    const parkingMapHtml = isParking ? renderParkingMapBody(d) : '';
+
     return `
-      <details id="item-${d.id}" class="note-card">
+      <details id="item-${d.id}" class="note-card${isParking ? ' has-parking-map' : ''}">
         <summary class="note-summary">
           <div class="note-meta">
             <span><span class="accent"></span>${escapeHtml(d.category || 'Other')}</span>
@@ -4409,6 +4523,7 @@ function renderVault() {
         <div class="note-body">
           ${detailsHtml}
           ${notesHtml}
+          ${parkingMapHtml}
           <div class="note-actions"><button class="btn" onclick="editVault('${d.id}')">Edit</button></div>
         </div>
       </details>
